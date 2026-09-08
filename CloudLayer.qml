@@ -28,6 +28,10 @@ Canvas {
   onHatchColorChanged: requestPaint()
   onViewportChanged: requestPaint()
   onAvailableChanged: if (available) requestPaint()
+  // The popup is closed when this layer is built, and a Canvas can drop a
+  // paint requested while it is hidden. The data behind it changes only once
+  // per refresh interval, so without this the first request is also the last.
+  onVisibleChanged: if (visible) requestPaint()
 
   onPaint: {
     var ctx = getContext("2d")

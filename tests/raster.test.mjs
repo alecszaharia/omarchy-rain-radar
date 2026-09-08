@@ -65,5 +65,10 @@ test('the layers ask for a paint whenever anything relevant changes', () => {
     assert.match(qml, /onGridModelChanged: requestPaint\(\)/, `${source} must repaint on new data`);
     assert.match(qml, /onAvailableChanged: if \(available\) requestPaint\(\)/,
       `${source} must paint once the canvas is available`);
+    // The popup is closed when the layer is built, and a hidden Canvas can
+    // drop a requested paint. The data changes only once per refresh, so a
+    // dropped first request would never be followed by another.
+    assert.match(qml, /onVisibleChanged: if \(visible\) requestPaint\(\)/,
+      `${source} must paint when the popup opens`);
   }
 });
