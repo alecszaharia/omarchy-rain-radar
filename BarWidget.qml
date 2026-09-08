@@ -1,6 +1,7 @@
 import QtQuick
 import qs.Commons
 import qs.Ui
+import "Model.js" as Model
 
 // Bar entry for Cloud Radar. The bar mounts this widget in a slot; the popup
 // map lives in Panel.qml, loaded beneath this widget so the bar keeps tracking
@@ -19,6 +20,17 @@ BarWidget {
     if ("settings" in target) target.settings = root.settings
     if ("anchorItem" in target) target.anchorItem = button
     if ("hostWidget" in target) target.hostWidget = root
+    // Handed over as the service itself, not as copied values, so the panel's
+    // own bindings stay live as the data and status change.
+    if ("weather" in target) target.weather = weather
+  }
+
+  // The data service lives with the bar entry, which outlives the popup: the
+  // glyph has to keep reporting the centre sample whether or not the popup has
+  // ever been opened.
+  WeatherData {
+    id: weather
+    refreshMinutesSetting: root.setting("refreshMinutes", undefined)
   }
 
   function togglePanel() {
@@ -71,9 +83,10 @@ BarWidget {
     id: button
     anchors.fill: parent
     bar: root.bar
-    // Placeholder glyph. T-034 replaces this with the condition-driven glyph
-    // derived from the center sample.
-    text: ""
+    // Glyph only — never a percentage, a label or a thumbnail. Empty until a
+    // centre reading resolves to a condition, which T-041 gives its own
+    // appearance rather than letting unknown data read as clear weather.
+    text: Model.barGlyph(weather.gridModel ? weather.gridModel.center : null)
     slotSize: Style.bar.statusSlot
     // Suppressed: the popup is the detail view.
     tooltipText: ""

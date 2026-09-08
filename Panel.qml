@@ -27,8 +27,11 @@ Panel {
   // Theme values lifted off the bar once so every child binds to the same
   // source. barForeground comes from the Panel base and tracks bar.barForeground,
   // so a theme change propagates through these bindings without any reload.
-  // The published grid model, injected by the bar widget from WeatherData.
-  property var gridModel: null
+  // The data service, injected by the bar widget. Held as the service itself so
+  // these stay live bindings rather than values copied once at injection.
+  property var weather: null
+  readonly property var gridModel: weather ? weather.gridModel : null
+  readonly property string dataStatus: weather ? weather.status : Model.STATUS.loading
 
   readonly property color foregroundColor: root.barForeground
   readonly property string themeFontFamily: root.bar ? root.bar.fontFamily : ""
