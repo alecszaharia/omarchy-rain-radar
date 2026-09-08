@@ -36,3 +36,18 @@ Build site: context/plans/build-site.md
 - T-018: theming — DONE. Panel.qml, tests/theming.test.mjs. Gate P. Acceptance 1/1.
 - Tier 2 gate: SKIPPED (codex unauthenticated).
 - Tests: 101 passing. Next: tier 3 — T-019..T-027.
+
+### Wave 4 — Tier 3 — 2026-09-08
+- T-019: unavailable normalization — DONE. Model.js, tests/unavailable.test.mjs. Gate P. Acceptance 4/4.
+- T-020: parse boundary — DONE. Model.js, tests/parse.test.mjs. Gate P. Acceptance 1/1.
+- T-021: fetch executor — DONE. Model.js, WeatherData.qml, tests/fetch.test.mjs. Gate P. Acceptance 2/2. Live timeout proof (curl exit 28).
+- T-022: cache writer — DONE. Model.js, WeatherData.qml, tests/cache-write.test.mjs. Gate P. Acceptance 2/2.
+- T-023: Chisinau marker — DONE. CenterMarker.qml, Basemap.qml, tests/marker.test.mjs. Gate P. Acceptance 2/2.
+- T-024: cloud heatmap — DONE. CloudLayer.qml, Model.js, Panel.qml, docs, tests/cloud-heatmap.test.mjs. Gate P. Acceptance 4/4.
+- T-025: precipitation bands — DONE. Model.js, docs, tests/precipitation-bands.test.mjs. Gate P. Acceptance 2/2.
+- T-026: bar glyph mapping — DONE. Model.js, docs, tests/bar-glyph.test.mjs. Gate P. Acceptance 3/3.
+- T-027: updated line + attribution — DONE. Model.js, Panel.qml, tests/popup-text.test.mjs. Gate P. Acceptance 2/2.
+- Two self-inflicted test regressions caught and fixed at the gate: an over-broad "no curl in Model.js" purity rule, and a blanket "no literal opacity" rule that the marker legitimately violates. Both narrowed to the criterion they were protecting.
+- Harness bug fixed: plain() lost Infinity through JSON round-trip; now structuredClone.
+- Tier 3 gate: SKIPPED (codex unauthenticated).
+- Tests: 170 passing. Next: tier 4 — T-028..T-035.

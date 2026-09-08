@@ -16,3 +16,8 @@ Build site: context/plans/build-site.md
 | T-016 | DONE | BarWidget exposes opened/open/close/popoutSwitchClosing/closeForPopoutSwitch per Bar.findPanelWidget contract; asserted against shell Bar.qml. 5 tests. |
 | T-017 | DONE | Model.POPUP_CONTENT_WIDTH=480, read back from shell weather Panel.qml in test. Both dims via fittedContentWidth/Height. docs/rendering.md. 5 tests. |
 | T-018 | DONE | Panel foregroundColor/themeFontFamily lifted off bar; tests reject per-Text colours/fonts and any hex literal in QML. 5 tests. |
+| T-023 | DONE | CenterMarker.qml (extracted in T-024): dot+ring at projected centre, above all layers, no text anywhere in map layers. 7 tests. |
+| T-024 | DONE | CloudLayer.qml + Model.cloudOpacity/CLOUD_COLOR (#9aa0a6). 0%=transparent, 100%=opaque, monotonic, hue fixed outside loop. Layer order documented. 9 tests. |
+| T-025 | DONE | Model.PRECIPITATION_BANDS half-open [0,0.1)(0.1,2.5)(2.5,7.6)[7.6,inf) + precipitationBand(). Total, gapless. Harness plain() fixed to structuredClone. 9 tests. |
+| T-026 | DONE | Model.barCondition/barGlyph/BAR_GLYPHS. Precip wins, then cloud [0,25)(25,75)[75,100]. Swept exhaustively. Unavailable cloud -> null. 9 tests. |
+| T-027 | DONE | Model.updatedLabel/parseDataTime/formatClock + OPEN_METEO_ATTRIBUTION. GMT parsed explicitly, rendered in reader's zone. 5 tests. |
