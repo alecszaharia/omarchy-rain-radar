@@ -101,6 +101,25 @@ Panel {
             markerColor: root.foregroundColor
           }
         }
+
+        // Observation time of the model on screen. Empty until the first
+        // result carries one, rather than showing a placeholder clock.
+        Text {
+          text: Model.updatedLabel(root.gridModel ? root.gridModel.dataTime : "")
+          visible: text !== ""
+          color: root.foregroundColor
+          font.family: root.themeFontFamily
+          font.pixelSize: Style.font.bodySmall
+        }
+
+        // Required by Open-Meteo's terms, shown verbatim.
+        Text {
+          text: Model.OPEN_METEO_ATTRIBUTION
+          color: root.foregroundColor
+          opacity: 0.7
+          font.family: root.themeFontFamily
+          font.pixelSize: Style.font.bodySmall
+        }
       }
     }
   }

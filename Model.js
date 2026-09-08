@@ -584,3 +584,37 @@ function barGlyph(center) {
   var condition = barCondition(center)
   return condition ? BAR_GLYPHS[condition] : ""
 }
+
+// ---------------------------------------------------------------------------
+// Popup text — cavekit-map-rendering.md R5
+// ---------------------------------------------------------------------------
+
+// Required by Open-Meteo's CC BY 4.0 terms and shown in the popup verbatim.
+var OPEN_METEO_ATTRIBUTION = "Weather data by Open-Meteo.com"
+
+// The source reports its observation time without a zone suffix when the
+// request asks for GMT, so an explicit Z is added before parsing rather than
+// letting the runtime guess local time and shift the reading.
+function parseDataTime(dataTime) {
+  if (typeof dataTime !== "string") return null
+  var text = dataTime.replace(/^\s+|\s+$/g, "")
+  if (text === "") return null
+  if (!/(Z|[+-]\d{2}:?\d{2})$/.test(text)) text += "Z"
+  var date = new Date(text)
+  return isNaN(date.getTime()) ? null : date
+}
+
+// Local wall-clock HH:MM. The observation time is GMT; the user reads their own
+// clock, so it is displayed in their zone.
+function formatClock(date) {
+  var hours = date.getHours()
+  var minutes = date.getMinutes()
+  return (hours < 10 ? "0" : "") + hours + ":" + (minutes < 10 ? "0" : "") + minutes
+}
+
+// "Updated HH:MM" for the displayed model, or an empty string when there is no
+// usable observation time to report.
+function updatedLabel(dataTime) {
+  var date = parseDataTime(dataTime)
+  return date ? "Updated " + formatClock(date) : ""
+}
