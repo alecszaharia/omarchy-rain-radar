@@ -294,3 +294,23 @@ function effectiveRefreshMinutes(value) {
 function refreshIntervalMs(value) {
   return effectiveRefreshMinutes(value) * 60 * 1000
 }
+
+// Rectangle for each of the 108 cells, in cells[] order, covering the map area
+// exactly. Derived from the projection, so a resize is just a fresh call with
+// the new size rather than a second source of truth.
+function cellRects(width, height) {
+  var cellWidth = width / GRID_COLUMNS
+  var cellHeight = height / GRID_ROWS
+  var rects = []
+  for (var row = 0; row < GRID_ROWS; row++) {
+    for (var col = 0; col < GRID_COLUMNS; col++) {
+      rects.push({
+        x: col * cellWidth,
+        y: row * cellHeight,
+        width: cellWidth,
+        height: cellHeight
+      })
+    }
+  }
+  return rects
+}
