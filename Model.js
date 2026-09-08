@@ -502,6 +502,10 @@ var MARKER_RING_WIDTH = 1.5
 // cloud against a light bar theme and a dark one alike.
 var CLOUD_COLOR = "#9aa0a6"
 
+// The same colour as channels, so the per-pixel field can be composited
+// without re-parsing the string for every pixel.
+var CLOUD_RGB = { r: 0x9a, g: 0xa0, b: 0xa6 }
+
 // Opacity for a cloud cover percentage. 0% is fully transparent, so the
 // basemap underneath is untouched, and 100% is fully opaque — overcast hides
 // the ground, which is why the Chisinau marker is drawn above this layer.
@@ -699,5 +703,80 @@ function statusOnFailure(snapshot, errorText, now) {
     lastAttemptAt: snapshot ? snapshot.lastAttemptAt : now,
     // The error status always carries something a reader can act on.
     lastErrorText: text === "" ? "Refresh failed" : text
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Cloud field interpolation — cavekit-map-rendering.md R3
+//
+// The 12x9 readings are grid-point samples, not tiles. Drawing them as flat
+// rectangles would show the sampling lattice rather than the weather, so the
+// field is bilinearly interpolated between the four surrounding grid points.
+// ---------------------------------------------------------------------------
+
+function clampIndex(value, limit) {
+  if (value < 0) return 0
+  if (value > limit) return limit
+  return value
+}
+
+// Bilinear sample of the cloud field at a fractional position in the map area,
+// u and v each running 0..1 from the west and north edges.
+//
+// Grid points are cell centres, so the sample lattice sits half a cell inside
+// each edge; positions outside it clamp to the edge samples rather than
+// extrapolating into values the source never reported.
+//
+// Corners with no reading are dropped and the remaining weights renormalised,
+// which is what keeps a cell's unavailable neighbour from bleeding a hole into
+// its own numeric value. A sample with no usable corner at all is unavailable.
+function sampleCloudField(cells, u, v) {
+  if (!cells || cells.length < GRID_CELL_COUNT) return UNAVAILABLE
+
+  var x = u * GRID_COLUMNS - 0.5
+  var y = v * GRID_ROWS - 0.5
+
+  var x0 = Math.floor(x)
+  var y0 = Math.floor(y)
+  var tx = x - x0
+  var ty = y - y0
+
+  var col0 = clampIndex(x0, GRID_COLUMNS - 1)
+  var col1 = clampIndex(x0 + 1, GRID_COLUMNS - 1)
+  var row0 = clampIndex(y0, GRID_ROWS - 1)
+  var row1 = clampIndex(y0 + 1, GRID_ROWS - 1)
+
+  // Clamping collapses the weight on the outside of an edge onto the edge
+  // sample itself, so the field stays flat beyond the outermost grid points.
+  if (x0 < 0 || x0 >= GRID_COLUMNS - 1) tx = (x0 < 0) ? 1 : 0
+  if (y0 < 0 || y0 >= GRID_ROWS - 1) ty = (y0 < 0) ? 1 : 0
+
+  var corners = [
+    { value: cells[row0 * GRID_COLUMNS + col0].cloudCoverPercent, weight: (1 - tx) * (1 - ty) },
+    { value: cells[row0 * GRID_COLUMNS + col1].cloudCoverPercent, weight: tx * (1 - ty) },
+    { value: cells[row1 * GRID_COLUMNS + col0].cloudCoverPercent, weight: (1 - tx) * ty },
+    { value: cells[row1 * GRID_COLUMNS + col1].cloudCoverPercent, weight: tx * ty }
+  ]
+
+  var total = 0
+  var sum = 0
+  for (var i = 0; i < corners.length; i++) {
+    var corner = corners[i]
+    if (typeof corner.value !== "number") continue
+    if (corner.weight <= 0) continue
+    sum += corner.value * corner.weight
+    total += corner.weight
+  }
+
+  if (total <= 0) return UNAVAILABLE
+  return sum / total
+}
+
+// Fractional map position of a grid point, for callers that need to sample at
+// a known reading.
+function gridPointFraction(col, row) {
+  return {
+    u: (col + 0.5) / GRID_COLUMNS,
+    v: (row + 0.5) / GRID_ROWS
   }
 }

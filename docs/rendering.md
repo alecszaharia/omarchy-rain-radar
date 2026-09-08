@@ -91,6 +91,22 @@ confused with the blue precipitation overlay above it.
 The grey is deliberately neither white nor black — it has to read as cloud
 against a light bar theme and a dark one alike.
 
+### Interpolation
+
+The 12x9 readings are grid-point samples, not tiles. Drawing them as flat
+rectangles would show the sampling lattice rather than the weather, so the layer
+paints a bilinearly interpolated field: every pixel is blended from the four
+surrounding grid points (`Model.sampleCloudField`).
+
+The sample lattice sits half a cell inside each edge, because grid points are
+cell centres. Past it the edge reading holds flat rather than extrapolating into
+values the source never reported.
+
+Corners with no reading are dropped from the blend and the remaining weights
+renormalised, so an unavailable cell cannot bleed a hole into a neighbour that
+does have a reading. A sample with no usable corner at all is itself
+unavailable.
+
 ### Layer order
 
 Outlines, then the cloud field, then the Chisinau marker. At 100% cover the
