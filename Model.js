@@ -450,10 +450,66 @@ function statusForParse(parsed) {
 // shortest refresh interval (10 minutes).
 var FETCH_TIMEOUT_SECONDS = 20
 
+// Separator between the response body and the trailing status line curl
+// appends. Chosen because it cannot occur in JSON.
+var FETCH_STATUS_SEPARATOR = "\n<<<cloud-radar-status:"
+
 // The one command a refresh runs. curl enforces the timeout itself, so the
 // bound holds even if the process is otherwise unresponsive.
+//
+// Deliberately not -f: a rate-limit rejection has to be told apart from an
+// ordinary transport failure, which means reading the HTTP status rather than
+// collapsing every 4xx into one exit code. The status is appended after the
+// body so a single stream carries both.
 function fetchCommand() {
-  return ["curl", "-fsS", "--max-time", String(FETCH_TIMEOUT_SECONDS), requestUrl()]
+  return [
+    "curl", "-sS",
+    "--max-time", String(FETCH_TIMEOUT_SECONDS),
+    "-w", FETCH_STATUS_SEPARATOR + "%{http_code}",
+    requestUrl()
+  ]
+}
+
+// Splits curl's output back into the body and the HTTP status it carried.
+// A missing or unreadable status reads as 0, which is not a success and not a
+// rate limit either — it is simply unknown.
+function parseFetchOutput(rawText) {
+  var text = String(rawText === null || rawText === undefined ? "" : rawText)
+  var marker = text.lastIndexOf(FETCH_STATUS_SEPARATOR)
+  if (marker < 0) return { body: text, httpCode: 0 }
+
+  var body = text.slice(0, marker)
+  var codeText = text.slice(marker + FETCH_STATUS_SEPARATOR.length).replace(/^\s+|\s+$/g, "")
+  var code = parseInt(codeText, 10)
+  return { body: body, httpCode: isNaN(code) ? 0 : code }
+}
+
+function isSuccessStatus(httpCode) {
+  return httpCode >= 200 && httpCode < 300
+}
+
+// ---------------------------------------------------------------------------
+// Rate limiting — cavekit-weather-data.md R4
+// ---------------------------------------------------------------------------
+
+var RATE_LIMIT_STATUS = 429
+var RATE_LIMIT_BACKOFF_MULTIPLIER = 2
+
+function isRateLimited(httpCode) {
+  return httpCode === RATE_LIMIT_STATUS
+}
+
+// How long to wait after a rate-limit rejection: at least twice the configured
+// interval, so backing off actually reduces the load rather than retrying into
+// the same limit.
+function rateLimitBackoffMs(intervalMs) {
+  return intervalMs * RATE_LIMIT_BACKOFF_MULTIPLIER
+}
+
+function httpFailureText(httpCode) {
+  if (isRateLimited(httpCode)) return "Open-Meteo rate limit reached (HTTP 429)"
+  if (httpCode === 0) return "No response from Open-Meteo"
+  return "Open-Meteo returned HTTP " + httpCode
 }
 
 // curl exit 28 is its operation timeout; the rest are transport or HTTP

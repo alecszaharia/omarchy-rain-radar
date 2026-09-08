@@ -62,6 +62,27 @@ QtObject {
     }
   }
 
+  // The wait a rate limit imposes, at least twice the configured interval.
+  readonly property int rateLimitBackoffMs: Model.rateLimitBackoffMs(root.refreshIntervalMs)
+
+  function applyRateLimit() {
+    statusState.apply(Model.statusOnFailure(statusState.snapshot(),
+                                            Model.httpFailureText(Model.RATE_LIMIT_STATUS),
+                                            new Date()))
+    // Ordinary retries are abandoned: they would land inside the same window.
+    root.failedAttempts = 0
+    retryTimer.running = false
+
+    backoffTimer.interval = root.rateLimitBackoffMs
+    backoffTimer.running = true
+  }
+
+  property Timer backoffTimer: Timer {
+    repeat: false
+    running: false
+    onTriggered: root.refresh()
+  }
+
   property Timer retryTimer: Timer {
     repeat: false
     running: false
@@ -69,7 +90,21 @@ QtObject {
   }
 
   function applyResponse(rawText, completedAt) {
-    var parsed = Model.parseGridModel(rawText, completedAt)
+    var response = Model.parseFetchOutput(rawText)
+
+    // A rate-limit rejection is not an ordinary failure: retrying into the same
+    // limit would make it worse, so the cycle backs off well past it instead.
+    if (Model.isRateLimited(response.httpCode)) {
+      root.applyRateLimit()
+      return
+    }
+
+    if (!Model.isSuccessStatus(response.httpCode)) {
+      root.applyFailure(Model.httpFailureText(response.httpCode))
+      return
+    }
+
+    var parsed = Model.parseGridModel(response.body, completedAt)
     // The previously published model survives a failed parse.
     root.gridModel = Model.nextPublishedModel(root.gridModel, parsed)
     if (parsed.model) {
@@ -78,6 +113,7 @@ QtObject {
       // retry allowance.
       root.failedAttempts = 0
       retryTimer.running = false
+      backoffTimer.running = false
       root.evaluateStaleness()
       // Persist after publishing, never before: the screen must not wait on
       // the disk, and a write failure must not hold back a good model.
