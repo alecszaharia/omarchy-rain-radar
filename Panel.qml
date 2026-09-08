@@ -24,6 +24,12 @@ Panel {
   property var hostWidget: null
   readonly property var barIdentity: hostWidget || root
 
+  // Theme values lifted off the bar once so every child binds to the same
+  // source. barForeground comes from the Panel base and tracks bar.barForeground,
+  // so a theme change propagates through these bindings without any reload.
+  readonly property color foregroundColor: root.barForeground
+  readonly property string themeFontFamily: root.bar ? root.bar.fontFamily : ""
+
   function switchPanel(direction) {
     if (root.bar && typeof root.bar.switchPanelFrom === "function")
       return root.bar.switchPanelFrom(root.barIdentity, direction)
@@ -62,8 +68,8 @@ Panel {
 
         Text {
           text: "Cloud Radar"
-          color: root.barForeground
-          font.family: root.bar ? root.bar.fontFamily : ""
+          color: root.foregroundColor
+          font.family: root.themeFontFamily
           font.pixelSize: Style.font.body
         }
 
