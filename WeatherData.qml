@@ -34,6 +34,16 @@ QtObject {
     return true
   }
 
+  // The manual path, used by the popup's refresh control. It is deliberately
+  // the same single-flight guard as the scheduled path rather than a second
+  // entry point: pressing refresh twice while a fetch is running coalesces onto
+  // the one already on the wire instead of starting another.
+  //
+  // Returns true when this call is the one that started a request.
+  function requestManualRefresh() {
+    return root.refresh()
+  }
+
   function applyFailure(text) {
     statusState.apply(Model.statusOnFailure(statusState.snapshot(), text, new Date()))
   }
