@@ -108,6 +108,79 @@ Panel {
           }
         }
 
+        // ---- Legends (R5) ------------------------------------------------
+
+        // Cloud cover: the scale is opacity, so the legend is the same colour
+        // ramped from transparent to full, with both ends labelled.
+        Row {
+          width: parent.width
+          spacing: Style.space(8)
+
+          Text {
+            id: cloudScaleMin
+            text: "0%"
+            anchors.verticalCenter: parent.verticalCenter
+            color: root.foregroundColor
+            font.family: root.themeFontFamily
+            font.pixelSize: Style.font.bodySmall
+          }
+
+          Rectangle {
+            width: parent.width - cloudScaleMin.width - cloudScaleMax.width - Style.space(16)
+            height: Style.space(10)
+            anchors.verticalCenter: parent.verticalCenter
+            radius: Style.space(2)
+            gradient: Gradient {
+              orientation: Gradient.Horizontal
+              GradientStop { position: 0.0; color: "transparent" }
+              GradientStop { position: 1.0; color: Model.CLOUD_COLOR }
+            }
+          }
+
+          Text {
+            id: cloudScaleMax
+            text: "100% cloud"
+            anchors.verticalCenter: parent.verticalCenter
+            color: root.foregroundColor
+            font.family: root.themeFontFamily
+            font.pixelSize: Style.font.bodySmall
+          }
+        }
+
+        // Precipitation: one swatch per band at the band's own opacity, each
+        // labelled with the millimetre threshold it covers.
+        Row {
+          width: parent.width
+          spacing: Style.space(10)
+
+          Repeater {
+            model: Model.PRECIPITATION_BANDS
+
+            Row {
+              spacing: Style.space(4)
+
+              Rectangle {
+                width: Style.space(12)
+                height: Style.space(10)
+                anchors.verticalCenter: parent.verticalCenter
+                radius: Style.space(2)
+                color: Model.PRECIPITATION_COLOR
+                opacity: modelData.opacity
+                border.width: modelData.opacity === 0 ? 1 : 0
+                border.color: root.foregroundColor
+              }
+
+              Text {
+                text: Model.precipitationBandName(modelData) + " " + Model.precipitationBandLabel(modelData)
+                anchors.verticalCenter: parent.verticalCenter
+                color: root.foregroundColor
+                font.family: root.themeFontFamily
+                font.pixelSize: Style.font.bodySmall
+              }
+            }
+          }
+        }
+
         // Observation time of the model on screen. Empty until the first
         // result carries one, rather than showing a placeholder clock.
         Text {

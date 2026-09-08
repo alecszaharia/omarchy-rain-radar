@@ -796,3 +796,17 @@ function gridPointFraction(col, row) {
     v: (row + 0.5) / GRID_ROWS
   }
 }
+
+// Human-readable threshold for a precipitation band, used by the popup legend.
+function precipitationBandLabel(band) {
+  if (!band) return ""
+  if (band.maxMm === Infinity) return band.minMm + "+ mm"
+  if (band.minMm === 0) return "< " + band.maxMm + " mm"
+  return band.minMm + "-" + band.maxMm + " mm"
+}
+
+// Title case for a band id, so the legend reads "Light" rather than "light".
+function precipitationBandName(band) {
+  if (!band || !band.id) return ""
+  return band.id.charAt(0).toUpperCase() + band.id.slice(1)
+}
