@@ -72,8 +72,12 @@ test('R6: staleness is also evaluated after a success and after a restore', () =
 test('R6: a fetch in progress or a failed attempt keeps the status', () => {
   const evaluate = service.slice(service.indexOf('function evaluateStaleness'),
                                  service.indexOf('property Timer stalenessTimer'));
+  // A fetch in progress owns the status outright.
   assert.match(evaluate, /if \(statusState\.status === Model\.STATUS\.loading\) return/);
-  assert.match(evaluate, /if \(statusState\.status === Model\.STATUS\.error\) return/);
-  assert.match(evaluate, /Model\.STATUS\.stale/);
-  assert.match(evaluate, /Model\.STATUS\.ready/);
+  // A failed attempt keeps error through the precedence rule (T-046) rather
+  // than a separate early return here.
+  assert.match(evaluate, /Model\.resolveStatus\([\s\S]*?statusState\.status === Model\.STATUS\.error\)/);
+  assert.equal(M.resolveStatus(modelAged(120), NOW, INTERVAL, true), 'error');
+  assert.equal(M.resolveStatus(modelAged(120), NOW, INTERVAL, false), 'stale');
+  assert.equal(M.resolveStatus(modelAged(1), NOW, INTERVAL, false), 'ready');
 });

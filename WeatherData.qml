@@ -243,14 +243,13 @@ QtObject {
 
   function evaluateStaleness() {
     if (!root.gridModel) return
-    // A fetch in progress owns the status, and a failed attempt keeps it:
-    // error takes precedence over stale (formalised in T-046).
+    // A fetch in progress owns the status until it resolves.
     if (statusState.status === Model.STATUS.loading) return
-    if (statusState.status === Model.STATUS.error) return
 
-    var next = Model.isStale(root.gridModel, new Date(), root.refreshIntervalMs)
-      ? Model.STATUS.stale
-      : Model.STATUS.ready
+    // Precedence lives in Model.resolveStatus: while the most recent attempt
+    // has failed the status stays error even if the model is also stale.
+    var next = Model.resolveStatus(root.gridModel, new Date(), root.refreshIntervalMs,
+                                   statusState.status === Model.STATUS.error)
     if (statusState.status !== next) statusState.set(next)
   }
 

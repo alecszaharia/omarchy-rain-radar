@@ -1038,3 +1038,18 @@ function statusPresentation(status) {
   var presentation = STATUS_PRESENTATIONS[status]
   return presentation ? presentation : STATUS_PRESENTATIONS.loading
 }
+
+// ---------------------------------------------------------------------------
+// Status precedence — cavekit-weather-data.md R6
+//
+// Age and failure can be true at once: a model can be older than twice the
+// interval *and* the last attempt to replace it can have failed. Error wins.
+// "We tried and could not" is the more actionable of the two, and it already
+// implies the model is not being kept current.
+// ---------------------------------------------------------------------------
+
+function resolveStatus(model, now, intervalMs, lastAttemptFailed) {
+  if (lastAttemptFailed) return STATUS.error
+  if (!model) return STATUS.loading
+  return isStale(model, now, intervalMs) ? STATUS.stale : STATUS.ready
+}
