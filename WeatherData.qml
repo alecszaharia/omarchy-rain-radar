@@ -105,4 +105,22 @@ QtObject {
       console.warn("cloud-radar: cache write failed at", root.cachePath, error)
     }
   }
+
+  // ---- Scheduling (R4) ---------------------------------------------------
+  // The interval is a binding on the setting, so editing refreshMinutes
+  // re-evaluates it and QML restarts the timer on the new period. That is what
+  // makes a setting change take effect without a shell restart.
+
+  readonly property int refreshIntervalMs: Model.refreshIntervalMs(root.refreshMinutesSetting)
+  readonly property int effectiveRefreshMinutes: Model.effectiveRefreshMinutes(root.refreshMinutesSetting)
+
+  property Timer refreshTimer: Timer {
+    interval: root.refreshIntervalMs
+    repeat: true
+    running: true
+    // The first fetch is decided by the load-time rule in T-036, not by the
+    // timer, so this only drives the repeating schedule.
+    triggeredOnStart: false
+    onTriggered: root.refresh()
+  }
 }
