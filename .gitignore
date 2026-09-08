@@ -18,25 +18,25 @@
 # Node tooling for the test suite
 node_modules/
 npm-debug.log*
-yarn-error.log*
-.npm/
 coverage/
-*.tsbuildinfo
 
-# Qt / QML build leftovers
+# QML / Qt caches and build output
 *.qmlc
 *.jsc
 .qmlls.ini
 .qt/
 build/
 
-# Editors and IDEs
+# Packaged plugin artifacts
+*.tar.gz
+*.tar.zst
+*.zip
+
+# Editors
 .vscode/
 .idea/
 *.swp
-*.swo
 *~
-.direnv/
 
 # OS cruft
 .DS_Store
