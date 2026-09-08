@@ -3,30 +3,36 @@ import "Model.js" as Model
 
 // Precipitation overlay — cavekit-map-rendering.md R4.
 //
-// Stacked above the cloud field. One blue, four band opacities; the amount is
-// interpolated first and banded afterwards, so band edges follow the data
-// rather than the sampling lattice. The raster is filled by
-// Model.paintPrecipitationField for the same reason the cloud layer is.
-Canvas {
+// Same fixed-raster approach as the cloud layer, and for the same reason.
+Item {
   id: root
 
   property var gridModel: null
 
-  onWidthChanged: requestPaint()
-  onHeightChanged: requestPaint()
-  onGridModelChanged: requestPaint()
+  Canvas {
+    id: canvas
+    width: Model.FIELD_RASTER_WIDTH
+    height: Model.FIELD_RASTER_HEIGHT
+    smooth: true
+    antialiasing: true
 
-  onPaint: {
-    var ctx = getContext("2d")
-    ctx.reset()
+    transform: Scale {
+      xScale: root.width > 0 ? root.width / canvas.width : 1
+      yScale: root.height > 0 ? root.height / canvas.height : 1
+    }
 
-    var w = Math.floor(root.width)
-    var h = Math.floor(root.height)
-    if (w <= 0 || h <= 0) return
-    if (!root.gridModel || !root.gridModel.cells) return
+    property var gridModel: root.gridModel
+    onGridModelChanged: requestPaint()
 
-    var image = ctx.createImageData(w, h)
-    Model.paintPrecipitationField(root.gridModel.cells, w, h, image.data, Model.PRECIPITATION_RGB)
-    ctx.putImageData(image, 0, 0)
+    onPaint: {
+      var ctx = getContext("2d")
+      ctx.reset()
+      if (!root.gridModel || !root.gridModel.cells) return
+
+      var image = ctx.createImageData(canvas.width, canvas.height)
+      Model.paintPrecipitationField(root.gridModel.cells, canvas.width, canvas.height,
+                                    image.data, Model.PRECIPITATION_RGB)
+      ctx.putImageData(image, 0, 0)
+    }
   }
 }

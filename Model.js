@@ -1076,6 +1076,28 @@ function resolveStatus(model, now, intervalMs, lastAttemptFailed) {
 // one sampleCloudField defines — a test asserts they agree pixel for pixel.
 // ---------------------------------------------------------------------------
 
+// Upper bound on how many pixels a single layer may paint.
+//
+// Writing into a canvas pixel buffer from QML is far more expensive per element
+// than writing into a plain array, and a paint that overruns the frame budget
+// does not merely drop frames: it pegs the shell. Above this budget the layer
+// paints nothing rather than risking that — a blank layer is a bug, a wedged
+// desktop is not survivable.
+var MAX_RASTER_PIXELS = 200000
+
+// The field is 12x9 samples, so painting one pixel per device pixel is wasted
+// work: at the popup's size on a 2x display that is 614,400 pixels, which is
+// what pegged the shell. The layers paint this fixed raster instead and the
+// scene graph scales it up with linear filtering, which is the same bilinear
+// interpolation done on the GPU for free. 10x oversampled against the grid, so
+// nothing visible is lost.
+var FIELD_RASTER_WIDTH = 120
+var FIELD_RASTER_HEIGHT = 80
+
+function rasterFits(w, h) {
+  return w > 0 && h > 0 && (w * h) <= MAX_RASTER_PIXELS
+}
+
 // Per-axis interpolation terms for one raster axis: for each output pixel, the
 // two sample indices that bracket it and the weight between them.
 function axisTerms(length, samples) {
@@ -1105,7 +1127,7 @@ function axisTerms(length, samples) {
 // Writes the cloud layer into `data` (RGBA bytes, length w*h*4).
 function paintCloudField(cells, w, h, data, cloud, hatch) {
   if (!cells || cells.length < GRID_CELL_COUNT) return
-  if (w <= 0 || h <= 0) return
+  if (!rasterFits(w, h)) return
 
   var cols = axisTerms(w, GRID_COLUMNS)
   var rows = axisTerms(h, GRID_ROWS)
@@ -1168,7 +1190,7 @@ function paintCloudField(cells, w, h, data, cloud, hatch) {
 // Writes the precipitation layer into `data`. Same interpolation, then banded.
 function paintPrecipitationField(cells, w, h, data, colour) {
   if (!cells || cells.length < GRID_CELL_COUNT) return
-  if (w <= 0 || h <= 0) return
+  if (!rasterFits(w, h)) return
 
   var cols = axisTerms(w, GRID_COLUMNS)
   var rows = axisTerms(h, GRID_ROWS)

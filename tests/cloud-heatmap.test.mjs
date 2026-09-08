@@ -71,11 +71,12 @@ test('R3: the value drives opacity and nothing else', () => {
 test('R3: the layer covers the whole map area and re-derives on resize', () => {
   // The field is sampled in normalised map coordinates, so the same code
   // covers any size; a resize is just another paint.
-  assert.match(layer, /var w = Math\.floor\(root\.width\)/);
-  assert.match(layer, /var h = Math\.floor\(root\.height\)/);
+  // The field is painted at a fixed raster and scaled to the item, so it
+  // covers the whole map area at any size without repainting on resize.
   assert.match(layer, /Model\.paintCloudField\(/);
-  assert.match(layer, /onWidthChanged: requestPaint\(\)/);
-  assert.match(layer, /onHeightChanged: requestPaint\(\)/);
+  assert.match(layer, /xScale: root\.width > 0 \? root\.width \/ canvas\.width : 1/);
+  assert.match(layer, /yScale: root\.height > 0 \? root\.height \/ canvas\.height : 1/);
+  assert.match(layer, /smooth: true/);
 });
 
 test('R3: unavailable cells are not drawn as clear sky', () => {

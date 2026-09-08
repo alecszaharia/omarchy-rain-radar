@@ -102,7 +102,8 @@ test('R4: every band is reachable and stronger than the one below', () => {
 });
 
 test('R4: the overlay re-derives on resize like the cloud field', () => {
-  assert.match(layer, /var w = Math\.floor\(root\.width\)/);
-  assert.match(layer, /onWidthChanged: requestPaint\(\)/);
-  assert.match(layer, /onHeightChanged: requestPaint\(\)/);
+  // Fixed raster scaled to the item, so a resize needs no repaint at all.
+  assert.match(layer, /xScale: root\.width > 0 \? root\.width \/ canvas\.width : 1/);
+  assert.match(layer, /yScale: root\.height > 0 \? root\.height \/ canvas\.height : 1/);
+  assert.match(layer, /smooth: true/);
 });

@@ -108,20 +108,23 @@ test('R4: a cell with no amount draws nothing even beside a drenched neighbour',
   }
 });
 
-test('the painters are fast enough to paint on every model change', () => {
-  // The readable per-pixel path costs ~270 ms for this raster in V8 and several
-  // times that in QML's engine, which is why the layer rendered blank. The
-  // budget here is generous but still an order of magnitude below that.
+test('a device-resolution raster is the cost being avoided', () => {
+  // Kept as the record of why the layers paint a fixed raster: at the popup's
+  // size on a 2x display this is what a per-device-pixel paint would cost, in
+  // V8, writing into a plain array. QML writing into a canvas pixel buffer is
+  // dearer still, which is how it came to peg the shell.
   const cells = plain(M.buildGridModel(completeResponse(), new Date().toISOString())).cells;
   const w = 480, h = 320;
   const data = new Array(w * h * 4).fill(0);
 
   const started = process.hrtime.bigint();
   M.paintCloudField(cells, w, h, data, CLOUD, HATCH);
-  M.paintPrecipitationField(cells, w, h, data, PRECIP);
-  const elapsedMs = Number(process.hrtime.bigint() - started) / 1e6;
+  const quarterScaleMs = Number(process.hrtime.bigint() - started) / 1e6;
 
-  assert.ok(elapsedMs < 120, `both layers took ${elapsedMs.toFixed(1)} ms, which is too slow to paint`);
+  const fixed = M.FIELD_RASTER_WIDTH * M.FIELD_RASTER_HEIGHT;
+  assert.ok(fixed * 12 < w * h,
+    'the fixed raster must be more than an order of magnitude smaller');
+  assert.ok(quarterScaleMs > 0);
 });
 
 test('the layers call the painters rather than sampling per pixel', () => {
@@ -132,4 +135,55 @@ test('the layers call the painters rather than sampling per pixel', () => {
   for (const [name, source] of [['CloudLayer', cloud], ['PrecipitationLayer', precipitation]]) {
     assert.ok(!/for \(var y = 0/.test(source), `${name} must not run its own pixel loop`);
   }
+});
+
+test('a raster larger than the budget paints nothing rather than wedging', () => {
+  // Writing into a canvas pixel buffer from QML costs far more per element than
+  // writing into a plain array, and an overrunning paint pegs the shell rather
+  // than merely dropping a frame. A blank layer is recoverable; a wedged
+  // desktop is not.
+  const cells = fieldCells(() => 50);
+  const w = 4000, h = 2880;
+  assert.ok(w * h > M.MAX_RASTER_PIXELS);
+  const data = { length: 0 };
+  let touched = false;
+  const probe = new Proxy(data, { set() { touched = true; return true; } });
+  M.paintCloudField(cells, w, h, probe, CLOUD, HATCH);
+  M.paintPrecipitationField(cells, w, h, probe, PRECIP);
+  assert.equal(touched, false, 'an oversized raster must not be painted at all');
+});
+
+test('the layers paint a fixed raster, not one pixel per device pixel', () => {
+  // At the popup's size on a 2x display a device-resolution raster is 614,400
+  // pixels, which is what pegged the shell. The fixed raster is independent of
+  // canvas size and comfortably inside the budget.
+  const deviceRaster = (M.POPUP_CONTENT_WIDTH * 2) * Math.round((M.POPUP_CONTENT_WIDTH / M.MAP_ASPECT) * 2);
+  assert.ok(deviceRaster > M.MAX_RASTER_PIXELS, 'the device raster is the thing being avoided');
+
+  assert.ok(M.rasterFits(M.FIELD_RASTER_WIDTH, M.FIELD_RASTER_HEIGHT));
+  assert.ok(M.FIELD_RASTER_WIDTH * M.FIELD_RASTER_HEIGHT < 20000,
+    'the fixed raster must be small enough to paint well inside a frame');
+
+  // Still generously oversampled against the 12x9 sample lattice, so the
+  // upscale loses nothing.
+  assert.ok(M.FIELD_RASTER_WIDTH >= M.GRID_COLUMNS * 8);
+  assert.ok(M.FIELD_RASTER_HEIGHT >= M.GRID_ROWS * 8);
+
+  for (const source of ['CloudLayer.qml', 'PrecipitationLayer.qml']) {
+    const qml = readRepoFile(source);
+    assert.match(qml, /width: Model\.FIELD_RASTER_WIDTH/, `${source} must paint the fixed raster`);
+    assert.match(qml, /smooth: true/, `${source} must scale smoothly`);
+    assert.ok(!/Math\.floor\(root\.width\)/.test(qml), `${source} must not size the raster to the item`);
+  }
+});
+
+test('the fixed raster paints well inside a frame budget', () => {
+  const cells = fieldCells((col, row) => (col * 13 + row * 29) % 101);
+  const w = M.FIELD_RASTER_WIDTH, h = M.FIELD_RASTER_HEIGHT;
+  const data = new Array(w * h * 4).fill(0);
+  const started = process.hrtime.bigint();
+  M.paintCloudField(cells, w, h, data, CLOUD, HATCH);
+  M.paintPrecipitationField(cells, w, h, data, PRECIP);
+  const elapsedMs = Number(process.hrtime.bigint() - started) / 1e6;
+  assert.ok(elapsedMs < 10, `both layers took ${elapsedMs.toFixed(2)} ms`);
 });
