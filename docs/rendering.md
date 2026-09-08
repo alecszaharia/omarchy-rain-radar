@@ -118,3 +118,30 @@ A reading that is not a usable number — including `UNAVAILABLE` — falls in t
 `none` band, so unknown precipitation is drawn as no precipitation rather than
 as an invented intensity. The cell's cloud cover is unaffected and is still
 drawn from its own value.
+
+## Bar glyph
+
+The bar entry is an icon and nothing else — no text, no percentage, no map
+thumbnail. The glyph reports the centre sample, resolved in this order:
+
+1. **Precipitating** if the centre's precipitation falls outside the `none`
+   band (see above), whatever the cloud cover.
+2. Otherwise by cloud cover, in half-open percent intervals:
+
+| Condition | Cloud cover | Glyph |
+| --- | --- | --- |
+| Precipitating | any, when precipitation is not `none` | `U+E318` |
+| Clear | `0 <= cc < 25` | `U+E30D` |
+| Partly cloudy | `25 <= cc < 75` | `U+E302` |
+| Overcast | `75 <= cc <= 100` | `U+E33D` |
+
+The two rules together are total and unambiguous: every valid numeric pair
+resolves to exactly one glyph.
+
+An unavailable centre precipitation counts as no precipitation, so a known sky
+is still described. An unavailable centre cloud cover resolves to no condition
+at all — `Model.barCondition` returns null — and T-041 renders that with the
+same appearance as an error, so unknown data is never shown as clear weather.
+
+The glyphs are Nerd Font weather icons taken from the set Omarchy's own weather
+widget draws, so they are known to render in the bar's font.

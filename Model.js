@@ -539,3 +539,48 @@ function precipitationBand(mm) {
   }
   return PRECIPITATION_BANDS[PRECIPITATION_BANDS.length - 1]
 }
+
+// ---------------------------------------------------------------------------
+// Bar glyph — cavekit-map-rendering.md R7
+//
+// The bar entry is an icon only. Its glyph reports the centre sample: whether
+// anything is falling first, and failing that how much cloud there is. The
+// mapping is total over every valid numeric pair. Documented in
+// docs/rendering.md.
+// ---------------------------------------------------------------------------
+
+// Nerd Font weather glyphs, the same set Omarchy's own weather widget draws
+// from, so they are known to render in the bar's font.
+var BAR_GLYPHS = {
+  clear: "",
+  partlyCloudy: "",
+  overcast: "",
+  precipitating: ""
+}
+
+// Cloud cover breaks, in percent. Half-open like the precipitation bands:
+// clear [0, 25), partly cloudy [25, 75), overcast [75, 100].
+var BAR_CLOUD_CLEAR_MAX = 25
+var BAR_CLOUD_OVERCAST_MIN = 75
+
+// The condition at the centre, or null when it cannot be known. Precipitation
+// wins over cloud cover: something falling is the more useful thing to report.
+// An unavailable precipitation reading counts as none, so a known sky is still
+// described; an unavailable cloud reading yields null, and T-041 turns that
+// into the same appearance as an error rather than a condition.
+function barCondition(center) {
+  if (!center) return null
+
+  var cloud = center.cloudCoverPercent
+  if (typeof cloud !== "number" || !isFinite(cloud) || cloud < 0 || cloud > 100) return null
+
+  if (precipitationBand(center.precipitationMm).id !== "none") return "precipitating"
+  if (cloud < BAR_CLOUD_CLEAR_MAX) return "clear"
+  if (cloud < BAR_CLOUD_OVERCAST_MIN) return "partlyCloudy"
+  return "overcast"
+}
+
+function barGlyph(center) {
+  var condition = barCondition(center)
+  return condition ? BAR_GLYPHS[condition] : ""
+}
