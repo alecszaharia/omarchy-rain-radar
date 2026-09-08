@@ -22,3 +22,9 @@ Build site: context/plans/build-site.md
 | T-028 | DONE | Timer interval bound to Model.refreshIntervalMs(setting) -> live setting changes, no restart. triggeredOnStart false. 6 tests. |
 | T-029 | DONE | Model.deserializeCache validates version + grid shape; FileView onLoaded restores before network, onLoadFailed silent. Never sets error. 7 tests. |
 | T-030 | DONE | Pure status reducer (statusOnAttemptStart/Success/Failure) + WeatherStatus.snapshot/apply. All four transitions observed from fixtures. 9 tests. |
+| T-036 | DONE | Model.loadTimeDecision + modelAgeMs; fresh cache spends no request, schedule resumes from fetchedAt+interval. Future timestamps undatable. 9 tests. |
+| T-037 | DONE | requestManualRefresh() reuses the one guard; interleaved press/tick/finish simulation shows concurrency never exceeds 1. 6 tests. |
+| T-038 | DONE | FETCH_RETRY_LIMIT=2 @30s (max 3 attempts), constants not settings; worst-case burst bounded below the 10-min minimum. docs/data.md. 9 tests. |
+| T-039 | DONE | STALE_INTERVAL_MULTIPLIER=2, isStale, re-evaluated on a 30s tick + after fetch/restore. Boundary is fresh; undatable is not stale. 9 tests. |
+| T-045 | DONE | Fetch protocol changed to -sS + -w status tail; 429 -> backoff 2x interval, abandons retry burst. Verified live (HTTP 200, 109 entries). 11 tests. |
+| T-046 | DONE | Model.resolveStatus centralises error-over-stale precedence; field guarantees asserted directly. 9 tests. |

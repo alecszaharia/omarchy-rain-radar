@@ -26,3 +26,10 @@ Build site: context/plans/build-site.md
 | T-033 | DONE | Cloud gradient legend (0%/100%) + Repeater over PRECIPITATION_BANDS with thresholds; none band outlined. 8 tests. |
 | T-034 | DONE | BarIconButton text = Model.barGlyph(center); WeatherData owned by BarWidget, service injected into Panel for live bindings. 7 tests. |
 | T-035 | PENDING-HUMAN | Cannot be verified by an agent. Needs the plugin running in a real shell on a light and a dark theme, judging outline/marker legibility and whether Moldova reads as distinct. Prepare at T-051/T-057. |
+| T-040 | DONE | Hatch (foreground colour, 8px period, alpha 0.5) for cells with no cloud reading; nearest-cell region; neighbours keep own values. 8 tests. |
+| T-041 | DONE | Model.barAppearance: ready 1.0 / stale 0.6 / error+unknown U+E374 @0.4. Glyph coverage verified against the shipped Nerd Font. 9 tests. |
+| T-042 | DONE | Model.STATUS_PRESENTATIONS, four distinct; map never hidden (asserted structurally). 9 tests. |
+| T-043 | PENDING-HUMAN | Cloud field smoothness at popup size. Needs the running plugin. |
+| T-044 | PENDING-HUMAN | Precipitation band distinctness at popup size. Needs the running plugin. |
+| T-047 | DONE | Rain/snow parity structural (no breakdown requested or modelled); unavailable precip skipped before interpolation. 7 tests. |
+| T-048 | DONE | Themed refresh button -> requestManualRefresh; popup has no path to the process. 6 tests. |

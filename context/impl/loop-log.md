@@ -58,3 +58,15 @@ Build site: context/plans/build-site.md
 - Refactors that touched earlier tasks (each re-verified, behaviour unchanged): status writes moved behind the reducer (T-021/T-022 assertions updated); tiled cloud fill replaced by the interpolated field (T-024 assertions updated); marker extracted to its own layer above the cloud (T-023).
 - Tier 4 gate: SKIPPED (codex unauthenticated).
 - Tests: 224 passing. Next: tier 5 — T-036..T-044.
+
+### Waves 6-8 — Tiers 5, 6, 7 + docs — 2026-09-08
+- Tier 5: T-036, T-037, T-038, T-039, T-040, T-041, T-042 DONE. T-043, T-044 left open (human review).
+- Tier 6: T-045, T-046, T-047, T-048 DONE.
+- Tier 7: T-049, T-050 DONE.
+- Out of order but genuinely unblocked: T-056, T-058 (README + attribution) — nothing in them depends on having installed the plugin.
+- Notable: fetch protocol changed in T-045 (-f dropped, HTTP status appended via -w) because a 429 must be distinguishable from an ordinary transport failure. Re-verified live.
+- Notable: T-041 found BAR_UNKNOWN_GLYPH had been written as an empty string; all glyphs now use \uXXXX escapes and were checked against the shipped JetBrainsMono Nerd Font.
+- Notable: T-047 found unavailable precipitation was being interpolated from neighbours; now skipped by the same nearest-cell rule as the cloud hatch.
+- Tier gates 5-7: SKIPPED (codex unauthenticated).
+- Tests: 340 passing. 49/60 tasks complete.
+- STOPPED: the remaining 11 tasks all need either a live Omarchy shell or human eyes. Waiting on the user.
