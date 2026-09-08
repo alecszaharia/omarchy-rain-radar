@@ -25,7 +25,9 @@ export function readRepoJson(relativePath) {
 
 // Values built inside the vm realm carry that realm's prototypes, so node's
 // strict deep-equality rejects them against host-realm literals even when the
-// data is identical. Round-tripping brings plain data back into this realm.
+// data is identical. structuredClone rebuilds them in this realm and, unlike a
+// JSON round-trip, preserves Infinity and NaN — which matter here, since an
+// unbounded band threshold is a real value in the contract.
 export function plain(value) {
-  return JSON.parse(JSON.stringify(value));
+  return structuredClone(value);
 }

@@ -96,3 +96,25 @@ against a light bar theme and a dark one alike.
 Outlines, then the cloud field, then the Chisinau marker. At 100% cover the
 cloud layer is opaque, so the marker is drawn on top; painted with the basemap
 it would disappear exactly when the map is most worth reading.
+
+## Precipitation bands
+
+Precipitation is drawn in blue only, with intensity carried by four bands. The
+thresholds are half-open millimetre intervals, so every value from 0 upwards
+falls in exactly one band — no gaps, no overlaps:
+
+| Band | Millimetres | Overlay opacity |
+| --- | --- | --- |
+| none | `0 <= mm < 0.1` | 0.0 — nothing is drawn |
+| light | `0.1 <= mm < 2.5` | 0.30 |
+| moderate | `2.5 <= mm < 7.6` | 0.55 |
+| heavy | `mm >= 7.6` | 0.80 |
+
+These are the conventional hourly rain-rate breaks. Rain and snow are not
+distinguished: the source reports a single precipitation amount and the same
+amount renders identically whatever is falling.
+
+A reading that is not a usable number — including `UNAVAILABLE` — falls in the
+`none` band, so unknown precipitation is drawn as no precipitation rather than
+as an invented intensity. The cell's cloud cover is unaffected and is still
+drawn from its own value.

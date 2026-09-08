@@ -511,3 +511,31 @@ function cloudOpacity(percent) {
   if (percent >= 100) return 1
   return percent / 100
 }
+
+// ---------------------------------------------------------------------------
+// Precipitation bands — cavekit-map-rendering.md R4
+//
+// Four bands, expressed as half-open millimetre intervals so the mapping is
+// total over every value from 0 upwards with no gap and no overlap: a reading
+// lands in exactly one band, always. Thresholds are the conventional hourly
+// rain-rate breaks. Documented in docs/rendering.md.
+// ---------------------------------------------------------------------------
+
+var PRECIPITATION_BANDS = [
+  { id: "none",     minMm: 0,   maxMm: 0.1,      opacity: 0.0 },
+  { id: "light",    minMm: 0.1, maxMm: 2.5,      opacity: 0.30 },
+  { id: "moderate", minMm: 2.5, maxMm: 7.6,      opacity: 0.55 },
+  { id: "heavy",    minMm: 7.6, maxMm: Infinity, opacity: 0.80 }
+]
+
+// The band for a millimetre amount, by half-open interval [minMm, maxMm).
+// Anything that is not a usable number — including UNAVAILABLE — reads as no
+// precipitation rather than inventing one.
+function precipitationBand(mm) {
+  if (typeof mm !== "number" || !isFinite(mm) || mm < 0) return PRECIPITATION_BANDS[0]
+  for (var i = 0; i < PRECIPITATION_BANDS.length; i++) {
+    var band = PRECIPITATION_BANDS[i]
+    if (mm >= band.minMm && mm < band.maxMm) return band
+  }
+  return PRECIPITATION_BANDS[PRECIPITATION_BANDS.length - 1]
+}
