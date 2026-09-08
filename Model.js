@@ -438,3 +438,27 @@ function nextPublishedModel(previous, parsed) {
 function statusForParse(parsed) {
   return (parsed && parsed.model) ? STATUS.ready : STATUS.error
 }
+
+// ---------------------------------------------------------------------------
+// Fetch execution — cavekit-weather-data.md R2
+// ---------------------------------------------------------------------------
+
+// Wall-clock ceiling on one request, in seconds. A fixed constant, deliberately
+// not a user setting: it exists so a stalled connection fails the refresh
+// instead of pinning the widget in `loading` forever. Comfortably longer than a
+// healthy 109-point response takes, short enough to be well inside the
+// shortest refresh interval (10 minutes).
+var FETCH_TIMEOUT_SECONDS = 20
+
+// The one command a refresh runs. curl enforces the timeout itself, so the
+// bound holds even if the process is otherwise unresponsive.
+function fetchCommand() {
+  return ["curl", "-fsS", "--max-time", String(FETCH_TIMEOUT_SECONDS), requestUrl()]
+}
+
+// curl exit 28 is its operation timeout; the rest are transport or HTTP
+// failures. Either way the refresh failed and the message has to say something.
+function fetchFailureText(exitCode) {
+  if (exitCode === 28) return "Open-Meteo timed out after " + FETCH_TIMEOUT_SECONDS + "s"
+  return "Could not reach Open-Meteo (curl exit " + exitCode + ")"
+}
