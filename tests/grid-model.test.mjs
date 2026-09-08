@@ -56,3 +56,19 @@ test('R3: the center sample is separate from the 108 cells', () => {
   assert.equal(model.cells.length, M.GRID_CELL_COUNT);
   assert.equal(model.cells.length, 108);
 });
+
+test('R3: cell coordinates ignore the coordinates echoed by the source', () => {
+  // Open-Meteo answers with its own model-grid coordinates, which are snapped
+  // away from the requested ones. Trusting them would move every cell.
+  const response = completeResponse();
+  for (const entry of response) {
+    entry.latitude = 0;
+    entry.longitude = 0;
+  }
+  const snapped = plain(M.buildGridModel(response, FETCHED_AT));
+  const points = plain(M.gridPoints()).slice(0, 108);
+  for (let i = 0; i < points.length; i++) {
+    assert.equal(snapped.cells[i].lat, points[i].lat, `cell ${i} must keep its grid latitude`);
+    assert.equal(snapped.cells[i].lon, points[i].lon, `cell ${i} must keep its grid longitude`);
+  }
+});

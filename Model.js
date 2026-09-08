@@ -152,6 +152,11 @@ var UNAVAILABLE = "unavailable"
 // Open-Meteo returns a bare object for a single location and an array for
 // several. Normalising to an array first keeps the rest of the mapping
 // positional and shape-agnostic.
+//
+// Positional is the only safe mapping here: the response echoes back the
+// coordinates of the source's own model grid, not the ones asked for (the
+// centre sample 47.01,28.86 comes back as 47.0,28.875). Cell coordinates
+// therefore always come from gridPoints(), never from the response.
 function responseLocations(raw) {
   if (raw === null || raw === undefined) return []
   if (Object.prototype.toString.call(raw) === "[object Array]") return raw
@@ -211,4 +216,42 @@ function buildGridModel(raw, fetchedAt) {
     dataTime: responseDataTime(locations),
     fetchedAt: fetchedAt
   }
+}
+
+// ---------------------------------------------------------------------------
+// Open-Meteo request — cavekit-weather-data.md R2
+//
+// One request covers every sampled point: Open-Meteo takes parallel latitude
+// and longitude lists and answers with one entry per pair, in the same order,
+// which is exactly the positional contract buildGridModel relies on.
+// ---------------------------------------------------------------------------
+
+var OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast"
+
+// Only the two measurements the map draws. No forecast series, no low/mid/high
+// cloud layers — anything more is bandwidth the plugin never renders.
+var OPEN_METEO_CURRENT = "cloud_cover,precipitation"
+
+// Four decimals is ~11 m at these latitudes: far below the grid's 1.5-degree
+// spacing, and it keeps the query string to a manageable length. The centre
+// coordinate survives it exactly.
+function roundCoordinate(value) {
+  return Math.round(value * 10000) / 10000
+}
+
+// The full request URL for one refresh. No API key: Open-Meteo's free
+// non-commercial tier is unauthenticated, so there is no credential to leak.
+function requestUrl() {
+  var points = gridPoints()
+  var latitudes = []
+  var longitudes = []
+  for (var i = 0; i < points.length; i++) {
+    latitudes.push(roundCoordinate(points[i].lat))
+    longitudes.push(roundCoordinate(points[i].lon))
+  }
+  return OPEN_METEO_URL +
+    "?latitude=" + latitudes.join(",") +
+    "&longitude=" + longitudes.join(",") +
+    "&current=" + OPEN_METEO_CURRENT +
+    "&timezone=GMT"
 }
