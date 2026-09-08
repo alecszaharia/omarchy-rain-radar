@@ -73,11 +73,17 @@ Panel {
           font.pixelSize: Style.font.body
         }
 
-        // The map surface, legends, timestamp and status block land here in
-        // T-014 onward.
+        // The map surface. Cloud heatmap, precipitation overlay, the Chisinau
+        // marker, legends and the status block layer in from T-023 onward.
         Item {
+          id: mapArea
           width: parent.width
           height: Math.round(width / Model.MAP_ASPECT)
+
+          Basemap {
+            anchors.fill: parent
+            strokeColor: root.foregroundColor
+          }
         }
       }
     }

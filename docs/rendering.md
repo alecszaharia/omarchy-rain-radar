@@ -43,3 +43,31 @@ content happening to be small enough.
 of latitude, so laying the map area out at 3:2 makes the equirectangular
 projection's horizontal and vertical scales equal and keeps the region
 undistorted.
+
+## Basemap emphasis rule
+
+Moldova is the region the map is about, so it is drawn differently from its
+neighbours. The rule lives in `Model.basemapStyle(region)`:
+
+| Region kind | Stroke width | Opacity | Filled |
+| --- | --- | --- | --- |
+| Moldova (`emphasis: true`) | `BASEMAP_STROKE_WIDTH * 2` = 2.0 | 1.0 | no |
+| Other countries | `BASEMAP_STROKE_WIDTH` = 1.0 | 0.45 | no |
+| Black Sea (`kind: "water"`) | 1.0 | 0.18 | yes |
+
+Two attributes separate Moldova from its neighbours — twice the stroke weight
+and full opacity against their muted 0.45 — so the emphasis survives even where
+a shared border means the two outlines coincide.
+
+Every stroke uses the bar's foreground colour rather than a fixed palette, and
+varies only in width and opacity. That is what keeps the basemap legible under
+both light and dark themes without a second set of colours to maintain.
+
+Draw order is water, then neighbours, then Moldova, so the emphasized outline is
+never overdrawn by a neighbour sharing its border.
+
+## Outline data
+
+`data/Outlines.js` is a generated QML `.js` resource, not JSON. The QML engine
+loads it as part of the compilation unit, so drawing the basemap reads no file
+and issues no network request. Regenerate it with `tools/build-outlines.py`.

@@ -324,3 +324,43 @@ function cellRects(width, height) {
 // fittedContentWidth, so Cloud Radar sits beside it at a matching width.
 // Documented in docs/rendering.md.
 var POPUP_CONTENT_WIDTH = 480
+
+// ---------------------------------------------------------------------------
+// Basemap styling — cavekit-map-rendering.md R2
+//
+// The emphasis rule, documented in docs/rendering.md: Moldova is stroked at
+// twice the base width and at full foreground opacity, while its neighbours are
+// stroked at the base width and held back to a muted opacity. Both use the
+// bar's foreground colour rather than a fixed palette, so the outlines stay
+// legible on light and dark themes alike.
+// ---------------------------------------------------------------------------
+
+var BASEMAP_STROKE_WIDTH = 1.0
+var BASEMAP_EMPHASIS_STROKE_MULTIPLIER = 2.0
+var BASEMAP_NEIGHBOUR_OPACITY = 0.45
+var BASEMAP_EMPHASIS_OPACITY = 1.0
+var BASEMAP_WATER_OPACITY = 0.18
+
+// Stroke width and opacity for one region. Returned rather than branched at the
+// call site so the rule lives in one place and can be asserted directly.
+function basemapStyle(region) {
+  if (region && region.kind === "water") {
+    return {
+      lineWidth: BASEMAP_STROKE_WIDTH,
+      opacity: BASEMAP_WATER_OPACITY,
+      filled: true
+    }
+  }
+  if (region && region.emphasis === true) {
+    return {
+      lineWidth: BASEMAP_STROKE_WIDTH * BASEMAP_EMPHASIS_STROKE_MULTIPLIER,
+      opacity: BASEMAP_EMPHASIS_OPACITY,
+      filled: false
+    }
+  }
+  return {
+    lineWidth: BASEMAP_STROKE_WIDTH,
+    opacity: BASEMAP_NEIGHBOUR_OPACITY,
+    filled: false
+  }
+}

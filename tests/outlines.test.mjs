@@ -4,10 +4,10 @@ import assert from 'node:assert/strict';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { readRepoJson } from './qml-js.mjs';
+import { loadQmlJs, plain } from './qml-js.mjs';
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
-const outlines = readRepoJson('data/outlines.json');
+const outlines = plain(loadQmlJs('data/Outlines.js').OUTLINES);
 
 const REQUIRED = ['moldova', 'romania', 'ukraine', 'bulgaria', 'hungary',
                   'slovakia', 'poland', 'belarus', 'serbia', 'black-sea'];
@@ -62,7 +62,7 @@ test('R2: the basemap is bundled, not fetched', () => {
   // The data ships in the package, and no shipped source may name a remote
   // host for it — that is what makes "no network request for outline data"
   // structural rather than a matter of runtime luck.
-  assert.ok(statSync(join(repoRoot, 'data/outlines.json')).size > 0);
+  assert.ok(statSync(join(repoRoot, 'data/Outlines.js')).size > 0);
   const shipped = readdirSync(repoRoot).filter((f) => f.endsWith('.qml') || f === 'Model.js');
   for (const file of shipped) {
     const source = readFileSync(join(repoRoot, file), 'utf8');
