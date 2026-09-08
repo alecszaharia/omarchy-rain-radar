@@ -41,6 +41,20 @@ test('R3: opacity increases monotonically between 0 and 100', () => {
   }
 });
 
+test('R3: light and broken cover stay light', () => {
+  // A linear ramp painted a third of the sky as a third-grey wash, which read
+  // as far heavier than the sky actually was. R3 fixes only the two ends and
+  // monotonicity; the curve between them is a presentation choice.
+  assert.ok(M.CLOUD_OPACITY_GAMMA > 1, 'the curve must hold back the low range');
+  for (const percent of [10, 20, 30, 40, 50, 60, 70, 80, 90]) {
+    assert.ok(M.cloudOpacity(percent) < percent / 100,
+      `${percent}% must render lighter than a linear ramp`);
+  }
+  // Thin cover is nearly invisible, and overcast is still solid.
+  assert.ok(M.cloudOpacity(10) < 0.05, 'a tenth of the sky must barely register');
+  assert.ok(M.cloudOpacity(90) > 0.8, 'near-overcast must still read as heavy');
+});
+
 test('R3: values outside the range are clamped, not extrapolated', () => {
   assert.equal(M.cloudOpacity(-10), 0);
   assert.equal(M.cloudOpacity(200), 1);

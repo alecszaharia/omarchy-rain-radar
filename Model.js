@@ -590,14 +590,22 @@ var CLOUD_COLOR = "#9aa0a6"
 // without re-parsing the string for every pixel.
 var CLOUD_RGB = { r: 0x9a, g: 0xa0, b: 0xa6 }
 
+// How sharply opacity climbs with cover. Above 1 the low and middle of the
+// range are held back, which is what makes the map read like the sky: a third
+// of the sky covered is thin haze, not a third-grey wash over everything. A
+// straight linear ramp painted broken cloud far heavier than it looks.
+var CLOUD_OPACITY_GAMMA = 1.6
+
 // Opacity for a cloud cover percentage. 0% is fully transparent, so the
 // basemap underneath is untouched, and 100% is fully opaque — overcast hides
 // the ground, which is why the Chisinau marker is drawn above this layer.
+// Monotonic throughout, as R3 requires; the curve between the ends is a
+// presentation choice, not part of the contract.
 function cloudOpacity(percent) {
   if (typeof percent !== "number" || !isFinite(percent)) return 0
   if (percent <= 0) return 0
   if (percent >= 100) return 1
-  return percent / 100
+  return Math.pow(percent / 100, CLOUD_OPACITY_GAMMA)
 }
 
 // ---------------------------------------------------------------------------

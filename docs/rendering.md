@@ -80,11 +80,21 @@ this layer ever uses. Cloud cover is expressed purely as opacity:
 | Cloud cover | Opacity |
 | --- | --- |
 | 0% | 0.0 — fully transparent, the basemap beneath is unmodified |
-| 50% | 0.5 |
+| 10% | 0.03 |
+| 30% | 0.15 |
+| 50% | 0.33 |
+| 80% | 0.70 |
 | 100% | 1.0 — fully opaque |
 
-`Model.cloudOpacity(percent)` is the ramp: linear, monotonically increasing, and
-clamped at both ends. The hue never varies with the value, so a viewer reads
+`Model.cloudOpacity(percent)` raises the cover fraction to
+`CLOUD_OPACITY_GAMMA` (1.6). It is monotonic and clamped at both ends, which is
+all R3 fixes; the curve between the ends is a presentation choice.
+
+It is not linear because a linear ramp does not read like the sky. Painting a
+third of the sky as a third-grey wash over the whole map made broken cloud look
+like heavy overcast — reported from the running plugin as "too much clouds" on
+a day the sky was nearly clear, while the readings under Chișinău were 1–7%.
+Holding the low and middle of the range back makes thin cover read as thin. The hue never varies with the value, so a viewer reads
 density rather than decoding a palette, and nothing on this layer can be
 confused with the blue precipitation overlay above it.
 
