@@ -107,6 +107,21 @@ renormalised, so an unavailable cell cannot bleed a hole into a neighbour that
 does have a reading. A sample with no usable corner at all is itself
 unavailable.
 
+The fractional weights are eased (`Model.easeWeight`, a smoothstep) before the
+blend. Plain bilinear across a 1.5° lattice reads as a wash, because every
+feature is spread evenly over the ~110 km between samples; easing concentrates
+the change in the middle of each span so a bank of cloud keeps a recognisable
+edge. The field stays continuous and monotonic, and at the midpoint between two
+readings the eased weight is still exactly 0.5 — so no cell boundary appears and
+R3's midpoint rule still holds.
+
+### Rectangle edges
+
+The layers rasterise into whole-pixel rectangles whose edges meet exactly:
+each runs to where the next begins. Drawing them a pixel larger to hide seams
+does the opposite — every overlap composites its alpha twice and prints a
+lattice across the field.
+
 ### Layer order
 
 Outlines, then the cloud field, then the precipitation overlay, then the

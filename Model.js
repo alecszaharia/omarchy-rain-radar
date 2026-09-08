@@ -820,6 +820,17 @@ function clampIndex(value, limit) {
 // Corners with no reading are dropped and the remaining weights renormalised,
 // which is what keeps a cell's unavailable neighbour from bleeding a hole into
 // its own numeric value. A sample with no usable corner at all is unavailable.
+// Weight shaping for the interpolation.
+//
+// Plain bilinear across a 1.5-degree lattice reads as a wash: every feature is
+// spread evenly over the 110 km between samples. Easing the fractional weights
+// concentrates the change in the middle of each span, so a bank of cloud keeps
+// a recognisable edge while the field stays perfectly continuous — at the
+// midpoint the eased weight is still exactly 0.5, so no boundary appears.
+function easeWeight(t) {
+  return t * t * (3 - 2 * t)
+}
+
 function sampleField(cells, u, v, key) {
   if (!cells || cells.length < GRID_CELL_COUNT) return UNAVAILABLE
 
@@ -841,11 +852,14 @@ function sampleField(cells, u, v, key) {
   if (x0 < 0 || x0 >= GRID_COLUMNS - 1) tx = (x0 < 0) ? 1 : 0
   if (y0 < 0 || y0 >= GRID_ROWS - 1) ty = (y0 < 0) ? 1 : 0
 
+  var ex = easeWeight(tx)
+  var ey = easeWeight(ty)
+
   var corners = [
-    { value: cells[row0 * GRID_COLUMNS + col0][key], weight: (1 - tx) * (1 - ty) },
-    { value: cells[row0 * GRID_COLUMNS + col1][key], weight: tx * (1 - ty) },
-    { value: cells[row1 * GRID_COLUMNS + col0][key], weight: (1 - tx) * ty },
-    { value: cells[row1 * GRID_COLUMNS + col1][key], weight: tx * ty }
+    { value: cells[row0 * GRID_COLUMNS + col0][key], weight: (1 - ex) * (1 - ey) },
+    { value: cells[row0 * GRID_COLUMNS + col1][key], weight: ex * (1 - ey) },
+    { value: cells[row1 * GRID_COLUMNS + col0][key], weight: (1 - ex) * ey },
+    { value: cells[row1 * GRID_COLUMNS + col1][key], weight: ex * ey }
   ]
 
   var total = 0

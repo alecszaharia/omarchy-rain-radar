@@ -33,8 +33,12 @@ Canvas {
     var cells = root.gridModel.cells
     var columns = Model.FIELD_RECT_COLUMNS
     var rows = Model.FIELD_RECT_ROWS
-    var rectWidth = root.width / columns
-    var rectHeight = root.height / rows
+    // Whole-pixel edges that meet exactly; see CloudLayer for why overdrawing
+    // is not an option here.
+    var edgeX = new Array(columns + 1)
+    for (var ex = 0; ex <= columns; ex++) edgeX[ex] = Math.round(ex * root.width / columns)
+    var edgeY = new Array(rows + 1)
+    for (var ey = 0; ey <= rows; ey++) edgeY[ey] = Math.round(ey * root.height / rows)
 
     ctx.fillStyle = Model.PRECIPITATION_COLOR
 
@@ -51,7 +55,7 @@ Canvas {
         if (band.opacity <= 0) continue
 
         ctx.globalAlpha = band.opacity
-        ctx.fillRect(rx * rectWidth, ry * rectHeight, rectWidth + 1, rectHeight + 1)
+        ctx.fillRect(edgeX[rx], edgeY[ry], edgeX[rx + 1] - edgeX[rx], edgeY[ry + 1] - edgeY[ry])
       }
     }
     ctx.globalAlpha = 1.0

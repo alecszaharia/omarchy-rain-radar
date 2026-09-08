@@ -100,7 +100,7 @@ test('R4: every band is reachable and stronger than the one below', () => {
 test('R4: the overlay re-derives on resize like the cloud field', () => {
   // Rect size is derived from the item size on every paint, so a resize is
   // just another paint.
-  assert.match(layer, /var rectWidth = root\.width \/ columns/);
-  assert.match(layer, /var rectHeight = root\.height \/ rows/);
+  assert.match(layer, /edgeX\[ex\] = Math\.round\(ex \* root\.width \/ columns\)/);
+  assert.match(layer, /edgeY\[ey\] = Math\.round\(ey \* root\.height \/ rows\)/);
   assert.match(layer, /onWidthChanged: requestPaint\(\)/);
 });

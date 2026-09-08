@@ -42,17 +42,25 @@ Canvas {
     var cells = root.gridModel.cells
     var columns = Model.FIELD_RECT_COLUMNS
     var rows = Model.FIELD_RECT_ROWS
-    var rectWidth = root.width / columns
-    var rectHeight = root.height / rows
+    // Edges are rounded to whole pixels and each rectangle runs to where the
+    // next one starts, so the grid tiles exactly. Drawing them a pixel larger
+    // instead makes every seam composite twice, which prints the lattice
+    // across the field.
+    var edgeX = new Array(columns + 1)
+    for (var ex = 0; ex <= columns; ex++) edgeX[ex] = Math.round(ex * root.width / columns)
+    var edgeY = new Array(rows + 1)
+    for (var ey = 0; ey <= rows; ey++) edgeY[ey] = Math.round(ey * root.height / rows)
 
     for (var ry = 0; ry < rows; ry++) {
       // Vertical term resolved once per row rather than once per rectangle.
       var gv = Model.viewToGridV((ry + 0.5) / rows, root.viewport)
-      var y = ry * rectHeight
+      var y = edgeY[ry]
+      var h = edgeY[ry + 1] - y
 
       for (var rx = 0; rx < columns; rx++) {
         var gu = Model.viewToGridU((rx + 0.5) / columns, root.viewport)
-        var x = rx * rectWidth
+        var x = edgeX[rx]
+        var w = edgeX[rx + 1] - x
 
         if (Model.isUnavailableAt(cells, gu, gv)) {
           // Documented distinct treatment: stripes in the theme foreground,
@@ -61,7 +69,7 @@ Canvas {
           if (hatch <= 0) continue
           ctx.globalAlpha = hatch
           ctx.fillStyle = root.hatchColor
-          ctx.fillRect(x, y, rectWidth + 1, rectHeight + 1)
+          ctx.fillRect(x, y, w, h)
           continue
         }
 
@@ -73,8 +81,7 @@ Canvas {
 
         ctx.globalAlpha = alpha
         ctx.fillStyle = Model.CLOUD_COLOR
-        // Overdraw by a pixel so neighbouring rects cannot leave seams.
-        ctx.fillRect(x, y, rectWidth + 1, rectHeight + 1)
+        ctx.fillRect(x, y, w, h)
       }
     }
     ctx.globalAlpha = 1.0

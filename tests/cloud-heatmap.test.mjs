@@ -72,8 +72,8 @@ test('R3: the layer covers the whole map area and re-derives on resize', () => {
   // covers the whole map area at any size without repainting on resize.
   assert.match(layer, /Model\.sampleCloudField\(cells, gu, gv\)/);
   assert.match(layer, /ctx\.fillRect\(/);
-  assert.match(layer, /var rectWidth = root\.width \/ columns/);
-  assert.match(layer, /var rectHeight = root\.height \/ rows/);
+  assert.match(layer, /edgeX\[ex\] = Math\.round\(ex \* root\.width \/ columns\)/);
+  assert.match(layer, /edgeY\[ey\] = Math\.round\(ey \* root\.height \/ rows\)/);
   assert.match(layer, /onWidthChanged: requestPaint\(\)/);
 });
 

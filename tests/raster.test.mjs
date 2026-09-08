@@ -72,3 +72,39 @@ test('the layers ask for a paint whenever anything relevant changes', () => {
       `${source} must paint when the popup opens`);
   }
 });
+
+
+test('R3: the rectangles tile exactly, with no overdrawn seams', () => {
+  // Drawing each rectangle a pixel larger makes every seam composite twice and
+  // prints a lattice across the field, which R3 forbids at popup size.
+  for (const source of ['CloudLayer.qml', 'PrecipitationLayer.qml']) {
+    const qml = readRepoFile(source);
+    assert.ok(!/\+ 1,|, rectWidth \+ 1|rectHeight \+ 1/.test(qml),
+      `${source} must not overdraw its rectangles`);
+    assert.match(qml, /Math\.round\(ex \* root\.width \/ columns\)/, `${source} must use whole-pixel edges`);
+    assert.match(qml, /Math\.round\(ey \* root\.height \/ rows\)/, `${source} must use whole-pixel edges`);
+  }
+});
+
+test('R3: whole-pixel edges cover the area with no gap and no overlap', () => {
+  // Mirrors the edge arithmetic the layers perform.
+  for (const [width, height] of [[524, 349], [480, 320], [961, 641], [333, 222]]) {
+    const edgeX = [];
+    for (let i = 0; i <= M.FIELD_RECT_COLUMNS; i++) edgeX.push(Math.round(i * width / M.FIELD_RECT_COLUMNS));
+    const edgeY = [];
+    for (let i = 0; i <= M.FIELD_RECT_ROWS; i++) edgeY.push(Math.round(i * height / M.FIELD_RECT_ROWS));
+
+    assert.equal(edgeX[0], 0);
+    assert.equal(edgeY[0], 0);
+    assert.equal(edgeX[edgeX.length - 1], width, `right edge at ${width}x${height}`);
+    assert.equal(edgeY[edgeY.length - 1], height, `bottom edge at ${width}x${height}`);
+
+    let covered = 0;
+    for (let i = 0; i < M.FIELD_RECT_COLUMNS; i++) {
+      const w = edgeX[i + 1] - edgeX[i];
+      assert.ok(w >= 0, `negative width at column ${i}`);
+      covered += w;
+    }
+    assert.equal(covered, width, `columns must cover exactly ${width}`);
+  }
+});
