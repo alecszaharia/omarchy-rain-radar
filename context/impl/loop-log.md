@@ -23,3 +23,16 @@ Build site: context/plans/build-site.md
 - T-009: popup chrome — DONE. Panel.qml, BarWidget.qml, tests/popup-chrome.test.mjs. Gate P. Acceptance 3/3.
 - Tier 1 gate: SKIPPED (codex unauthenticated).
 - Tests: 48 passing. Next: tier 2 — T-010..T-018.
+
+### Wave 3 — Tier 2 — 2026-09-08
+- T-010: grid tiling suite — DONE. tests/grid-tiling.test.mjs. Gate P. Acceptance 2/2.
+- T-011: grid model normalizer — DONE. Model.js, tests/fixtures/make.mjs, tests/grid-model.test.mjs. Gate P. Acceptance 3/3.
+- T-012: request builder — DONE. Model.js, tests/request.test.mjs. Gate P. Acceptance 3/3. Live API check confirmed array shape + snapped echoed coords.
+- T-013: refresh setting reader — DONE. Model.js, tests/refresh-setting.test.mjs. Gate P. Acceptance 3/3.
+- T-014: cell rectangles — DONE. Model.js, tests/cell-rects.test.mjs. Gate P. Acceptance 2/2.
+- T-015: basemap renderer — DONE. Basemap.qml, data/Outlines.js, Panel.qml, docs/rendering.md, tests/basemap.test.mjs. Gate P. Acceptance 1/1.
+- T-016: summon/hide routing — DONE. BarWidget.qml, tests/ipc-routing.test.mjs. Gate P. Acceptance 1/1.
+- T-017: popup width + fit — DONE. Model.js, Panel.qml, docs/rendering.md, tests/popup-geometry.test.mjs. Gate P. Acceptance 2/2.
+- T-018: theming — DONE. Panel.qml, tests/theming.test.mjs. Gate P. Acceptance 1/1.
+- Tier 2 gate: SKIPPED (codex unauthenticated).
+- Tests: 101 passing. Next: tier 3 — T-019..T-027.
