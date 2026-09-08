@@ -60,7 +60,10 @@ cloud cover is "unavailable" are drawn with a documented distinct treatment.
 **Acceptance Criteria:**
 - [ ] A cell value of 0% renders fully transparent (the basemap beneath is unmodified).
 - [ ] A cell value of 100% renders at full opacity of the documented neutral cloud colour.
-- [ ] Rendered opacity increases monotonically with cloud cover percentage between 0% and 100%.
+- [ ] Rendered opacity never decreases as cloud cover percentage increases between 0% and 100%, and
+      increases strictly above the visibility threshold.
+- [ ] Cloud cover at or below a documented visibility threshold renders nothing at all, so scattered cloud
+      over an otherwise clear sky leaves the map unmarked.
 - [ ] For numeric-valued cells, only the documented neutral cloud colour is used for this layer; hue does not
       vary with value.
 - [ ] For two adjacent grid points with different values, the rendered value sampled midway between them lies
@@ -186,6 +189,9 @@ the same fixed grid. It is view state, not a user setting.
 ## Changelog
 - 2026-09-04: Initial draft from the approved design (context/refs/approved-design-cloud-radar.md).
 - 2026-09-04: Reviewer pass 1 — clarified grid cell-centre convention, setting clamping, cache-fresh scheduling, fixed timeout/retry constants, unavailable-data handling.
+- 2026-09-08: R3 gains a visibility threshold at the user's request — only broken and overcast sky is drawn.
+  Its monotonicity criterion relaxes from strictly increasing to non-decreasing, since the ramp is now flat
+  below the threshold; it remains strictly increasing above it.
 - 2026-09-08: R5 loses its two legend criteria at the user's request; the popup no longer shows a legend for
   either scale. The scales themselves are unchanged and remain documented in docs/rendering.md.
 - 2026-09-08: R7 corrected — `error` no longer replaces the condition glyph. The original criterion tied the

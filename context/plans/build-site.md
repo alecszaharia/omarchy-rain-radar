@@ -321,7 +321,7 @@ tasks (R1–R6). Widest parallel front is Tier 2 / Tier 3 / Tier 5 at 9 tasks ea
 | map-rendering | R8 | Zoom is not a user setting; exactly one remains declared | T-061 | COVERED |
 | map-rendering | R8 | Zoom-in and zoom-out controls, inactive at their limits, plus wheel zoom | T-061 | COVERED |
 
-**Coverage: 151/151 criteria (100%)**
+**Coverage: 152/152 criteria (100%)**
 
 Documentation-producing tasks (each writes the documentation its criterion demands): T-015 (Moldova emphasis
 rule), T-017 (popup width constant), T-025 (precipitation mm band thresholds), T-026 (bar glyph threshold

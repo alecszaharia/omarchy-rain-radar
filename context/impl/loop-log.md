@@ -100,3 +100,11 @@ Build site: context/plans/build-site.md
 - The scales themselves are unchanged and stay documented in docs/rendering.md.
 - Popup content is now: title, map, controls (Refresh / - / +), status, "Updated HH:MM", attribution.
 - Tests: 361 passing.
+
+### Wave 13 — cloud ramp tuned against the running map — 2026-09-08
+- Three rounds of user judgement on the live plugin, each against the data in hand rather than waiting for fresh data.
+- Linear ramp -> gamma 1.6 -> 2.0 -> 3.0 -> visibility threshold. The threshold is what the user was actually asking for: gamma always leaves a faint wash everywhere, and scattered cloud over a clear sky was burying the cover that mattered.
+- Now: cover at or below CLOUD_VISIBLE_MIN_PERCENT (55) draws nothing; above it a gamma-1.5 ramp spans the remaining range to fully opaque at 100%.
+- R3 changed with it: monotonicity relaxed from strictly increasing to non-decreasing (strict above the threshold), and a new criterion for the threshold itself. Coverage 152/152.
+- Also fixed en route: the legend was still drawing a straight gradient while the map used a curve, so the key misstated every value. Moot now the legend is gone, but it was a real inconsistency introduced by the first curve.
+- Tests: 362 passing.

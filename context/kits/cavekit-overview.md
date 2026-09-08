@@ -57,9 +57,9 @@ Weather Data  ---- grid model (R3) + status (R6) ---->  Map Rendering
 | Cavekit | Requirements | Acceptance Criteria |
 | --- | --- | --- |
 | cavekit-weather-data.md | 6 | 49 |
-| cavekit-map-rendering.md | 8 | 63 |
+| cavekit-map-rendering.md | 8 | 64 |
 | cavekit-plugin-packaging.md | 6 | 39 |
-| **Total** | **20** | **151** |
+| **Total** | **20** | **152** |
 
 Four acceptance criteria are flagged `(human review)` — all in cavekit-map-rendering.md R2, R3 and R4 —
 covering theme legibility, Moldova's distinguishability at popup size, heatmap smoothness, and precipitation

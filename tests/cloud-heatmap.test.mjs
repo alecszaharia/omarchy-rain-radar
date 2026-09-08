@@ -31,28 +31,40 @@ test('R3: 100% renders at full opacity', () => {
   assert.equal(alphaFor(M, 100).alpha, 255);
 });
 
-test('R3: opacity increases monotonically between 0 and 100', () => {
+test('R3: opacity never decreases, and increases strictly once visible', () => {
   let previous = -1;
   for (let percent = 0; percent <= 100; percent += 0.5) {
     const alpha = M.cloudOpacity(percent);
-    assert.ok(alpha > previous, `opacity must increase at ${percent}%`);
+    assert.ok(alpha >= previous, `opacity must never decrease at ${percent}%`);
     assert.ok(alpha >= 0 && alpha <= 1, `opacity out of range at ${percent}%`);
+    if (percent > M.CLOUD_VISIBLE_MIN_PERCENT && previous > 0) {
+      assert.ok(alpha > previous, `opacity must increase above the threshold at ${percent}%`);
+    }
     previous = alpha;
   }
+});
+
+test('R3: cover at or below the threshold is not drawn at all', () => {
+  // Scattered cloud over an otherwise clear sky leaves the map unmarked; a
+  // faint wash everywhere buried the cover that actually matters.
+  assert.ok(M.CLOUD_VISIBLE_MIN_PERCENT > 0 && M.CLOUD_VISIBLE_MIN_PERCENT < 100);
+  for (let percent = 0; percent <= M.CLOUD_VISIBLE_MIN_PERCENT; percent += 1) {
+    assert.equal(M.cloudOpacity(percent), 0, `${percent}% must render nothing`);
+  }
+  assert.ok(M.cloudOpacity(M.CLOUD_VISIBLE_MIN_PERCENT + 1) > 0, 'just above it must show');
 });
 
 test('R3: light and broken cover stay light', () => {
   // A linear ramp painted a third of the sky as a third-grey wash, which read
   // as far heavier than the sky actually was. R3 fixes only the two ends and
   // monotonicity; the curve between them is a presentation choice.
-  assert.ok(M.CLOUD_OPACITY_GAMMA > 1, 'the curve must hold back the low range');
+  assert.ok(M.CLOUD_OPACITY_GAMMA > 1, 'the curve must hold back the thinner end');
   for (const percent of [10, 20, 30, 40, 50, 60, 70, 80, 90]) {
     assert.ok(M.cloudOpacity(percent) < percent / 100,
       `${percent}% must render lighter than a linear ramp`);
   }
-  // Thin cover is nearly invisible, and overcast is still solid.
-  assert.ok(M.cloudOpacity(10) < 0.01, 'a tenth of the sky must barely register');
-  assert.ok(M.cloudOpacity(50) < 0.2, 'half cover must read as thin, not as a grey wash');
+  // Only broken and overcast sky carries weight; overcast is still solid.
+  assert.equal(M.cloudOpacity(50), 0, 'half cover is scattered, not worth marking');
   assert.ok(M.cloudOpacity(90) > 0.6, 'near-overcast must still read as heavy');
   assert.equal(M.cloudOpacity(100), 1, 'overcast must still be solid');
 });
@@ -105,8 +117,12 @@ test('R3: unavailable cells are not drawn as clear sky', () => {
   assert.match(layer, /ctx\.fillStyle = root\.hatchColor/);
 });
 
-test('R3: the ramp is documented', () => {
+test('R3: the ramp and its threshold are documented', () => {
   assert.match(docs, /## Cloud heatmap/);
-  assert.match(docs, /fully transparent/);
+  assert.match(docs, /not drawn at all/);
   assert.match(docs, /fully opaque/);
+  assert.ok(docs.includes(`CLOUD_VISIBLE_MIN_PERCENT\` (${M.CLOUD_VISIBLE_MIN_PERCENT})`),
+    'the threshold value must be documented');
+  assert.ok(docs.includes(`CLOUD_OPACITY_GAMMA\` (${M.CLOUD_OPACITY_GAMMA})`),
+    'the curve must be documented');
 });

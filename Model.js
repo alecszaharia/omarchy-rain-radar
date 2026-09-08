@@ -590,11 +590,14 @@ var CLOUD_COLOR = "#9aa0a6"
 // without re-parsing the string for every pixel.
 var CLOUD_RGB = { r: 0x9a, g: 0xa0, b: 0xa6 }
 
-// How sharply opacity climbs with cover. Above 1 the low and middle of the
-// range are held back, which is what makes the map read like the sky: a third
-// of the sky covered is thin haze, not a third-grey wash over everything. A
-// straight linear ramp painted broken cloud far heavier than it looks.
-var CLOUD_OPACITY_GAMMA = 3.0
+// Cover at or below this is not drawn at all. Scattered cloud over a clear day
+// is not what this map is for: marking it faintly everywhere buried the cover
+// that actually matters. Only broken and overcast sky is worth a mark.
+var CLOUD_VISIBLE_MIN_PERCENT = 55
+
+// How sharply opacity climbs across the visible range, from the threshold to
+// full cover. Above 1 it holds back the thinner end of that range.
+var CLOUD_OPACITY_GAMMA = 1.5
 
 // Opacity for a cloud cover percentage. 0% is fully transparent, so the
 // basemap underneath is untouched, and 100% is fully opaque — overcast hides
@@ -603,9 +606,13 @@ var CLOUD_OPACITY_GAMMA = 3.0
 // presentation choice, not part of the contract.
 function cloudOpacity(percent) {
   if (typeof percent !== "number" || !isFinite(percent)) return 0
-  if (percent <= 0) return 0
+  if (percent <= CLOUD_VISIBLE_MIN_PERCENT) return 0
   if (percent >= 100) return 1
-  return Math.pow(percent / 100, CLOUD_OPACITY_GAMMA)
+
+  // Rescaled so the ramp spans the visible range rather than restarting the
+  // whole scale above the threshold.
+  var visible = (percent - CLOUD_VISIBLE_MIN_PERCENT) / (100 - CLOUD_VISIBLE_MIN_PERCENT)
+  return Math.pow(visible, CLOUD_OPACITY_GAMMA)
 }
 
 // ---------------------------------------------------------------------------
