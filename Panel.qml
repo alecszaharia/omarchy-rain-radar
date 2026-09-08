@@ -32,6 +32,8 @@ Panel {
   property var weather: null
   readonly property var gridModel: weather ? weather.gridModel : null
   readonly property string dataStatus: weather ? weather.status : Model.STATUS.loading
+  readonly property string dataErrorText: weather ? weather.statusState.lastErrorText : ""
+  readonly property var statusPresentation: Model.statusPresentation(root.dataStatus)
 
   readonly property color foregroundColor: root.barForeground
   readonly property string themeFontFamily: root.bar ? root.bar.fontFamily : ""
@@ -109,6 +111,33 @@ Panel {
           CenterMarker {
             anchors.fill: parent
             markerColor: root.foregroundColor
+          }
+        }
+
+        // ---- Status (R5) ---------------------------------------------------
+        // The map above stays visible in every status; the indicator only says
+        // how much to trust it.
+        Column {
+          width: parent.width
+          spacing: Style.space(2)
+          visible: root.statusPresentation.showIndicator
+
+          Text {
+            text: root.statusPresentation.label
+            color: root.foregroundColor
+            font.family: root.themeFontFamily
+            font.pixelSize: Style.font.bodySmall
+          }
+
+          Text {
+            text: root.dataErrorText
+            visible: root.statusPresentation.showErrorText && text !== ""
+            width: parent.width
+            wrapMode: Text.WordWrap
+            color: root.foregroundColor
+            opacity: 0.7
+            font.family: root.themeFontFamily
+            font.pixelSize: Style.font.bodySmall
           }
         }
 

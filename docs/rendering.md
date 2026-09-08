@@ -215,3 +215,20 @@ When the centre reading itself is unavailable the entry shows the unknown
 appearance regardless of status. That is deliberate and is what R7 asks for: the
 bar must never imply a reading it does not have, and "unknown" outranks "how old
 is this".
+
+## Popup status presentations
+
+Each of the four statuses has its own presentation
+(`Model.STATUS_PRESENTATIONS`). None of them hides the map: a stale or failed
+refresh still leaves the last good map on screen, and the indicator only says
+how much to trust it.
+
+| Status | Indicator | Text | Error detail |
+| --- | --- | --- | --- |
+| loading | shown | "Updating…" | no |
+| ready | none | — | no |
+| stale | shown | "Out of date" | no |
+| error | shown | "Refresh failed" | yes — `lastErrorText` below the label |
+
+Ready deliberately says nothing. An indicator for the normal case would be
+noise, and saying nothing is itself distinct from the other three.

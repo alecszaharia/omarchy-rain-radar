@@ -960,3 +960,25 @@ function barAppearance(center, status) {
   }
   return { glyph: BAR_GLYPHS[condition], opacity: BAR_READY_OPACITY }
 }
+
+// ---------------------------------------------------------------------------
+// Popup status presentation — cavekit-map-rendering.md R5
+//
+// Each status gets its own presentation, and none of them hides the map: a
+// stale or failed refresh still leaves the last good map on screen, with the
+// indicator explaining how much to trust it. Documented in docs/rendering.md.
+// ---------------------------------------------------------------------------
+
+var STATUS_PRESENTATIONS = {
+  loading: { label: "Updating…", showIndicator: true, showErrorText: false },
+  // Ready says nothing: an indicator for the normal case would be noise, and
+  // saying nothing is itself distinct from the other three.
+  ready: { label: "", showIndicator: false, showErrorText: false },
+  stale: { label: "Out of date", showIndicator: true, showErrorText: false },
+  error: { label: "Refresh failed", showIndicator: true, showErrorText: true }
+}
+
+function statusPresentation(status) {
+  var presentation = STATUS_PRESENTATIONS[status]
+  return presentation ? presentation : STATUS_PRESENTATIONS.loading
+}
