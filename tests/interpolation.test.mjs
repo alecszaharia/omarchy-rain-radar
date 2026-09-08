@@ -100,29 +100,26 @@ test('R3: a field with no usable reading anywhere is unavailable', () => {
 });
 
 test('R3: the layer paints the interpolated field into the canvas buffer', () => {
-  assert.match(layer, /Model\.paintCloudField\(/);
-  assert.match(layer, /ctx\.putImageData\(image, 0, 0\)/);
-  // No tiled fill remains, and the layer does not sample per pixel itself —
-  // that path is too slow to land a paint (see tests/raster.test.mjs).
-  assert.ok(!/fillRect/.test(layer), 'the tiled draw must be gone');
-  assert.ok(!/sampleCloudField/.test(layer), 'the layer must not sample per pixel');
+  // Rectangles sampled at their centres from the interpolated field — not one
+  // reading per cell, which would show the 12x9 lattice.
+  assert.match(layer, /Model\.sampleCloudField\(cells, u, v\)/);
+  assert.match(layer, /var columns = Model\.FIELD_RECT_COLUMNS/);
+  assert.ok(M.FIELD_RECT_COLUMNS > M.GRID_COLUMNS, 'the rect grid must be finer than the cells');
 });
 
 test('R3: the field still uses one colour, varying only alpha', () => {
   assert.deepEqual(plain(M.CLOUD_RGB), { r: 0x9a, g: 0xa0, b: 0xa6 });
   assert.equal(`#${[M.CLOUD_RGB.r, M.CLOUD_RGB.g, M.CLOUD_RGB.b].map((c) => c.toString(16)).join('')}`,
     M.CLOUD_COLOR);
-  // Painted across a ramp, only the alpha channel moves.
+  // Across a ramp the layer varies only the opacity; the fill colour is the
+  // one constant it sets.
   const cells = field((col) => col * 8);
-  const w = 60, h = 27;
-  const data = new Array(w * h * 4).fill(0);
-  M.paintCloudField(cells, w, h, data, plain(M.CLOUD_RGB), { r: 0, g: 0, b: 0 });
   const alphas = new Set();
-  for (let i = 0; i < w * h; i++) {
-    assert.equal(data[i * 4], M.CLOUD_RGB.r);
-    assert.equal(data[i * 4 + 1], M.CLOUD_RGB.g);
-    assert.equal(data[i * 4 + 2], M.CLOUD_RGB.b);
-    alphas.add(data[i * 4 + 3]);
+  for (let rx = 0; rx < M.FIELD_RECT_COLUMNS; rx++) {
+    const u = (rx + 0.5) / M.FIELD_RECT_COLUMNS;
+    const value = M.sampleCloudField(cells, u, 0.5);
+    alphas.add(M.cloudOpacity(value).toFixed(4));
   }
   assert.ok(alphas.size > 10, 'the ramp must produce many distinct opacities');
+  assert.match(readRepoFile('CloudLayer.qml'), /ctx\.fillStyle = Model\.CLOUD_COLOR/);
 });

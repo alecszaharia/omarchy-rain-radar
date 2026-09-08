@@ -47,17 +47,12 @@ test('R4: the layer uses blue only', () => {
 });
 
 test('R4: intensity is carried by opacity, not by hue', () => {
-  // Painted, a heavier band is more opaque while the channels stay put.
-  const cells = field(() => 0);
-  const w = 24, h = 18;
-  const light = new Array(w * h * 4).fill(0);
-  const heavy = new Array(w * h * 4).fill(0);
-  M.paintPrecipitationField(field(() => 1.0), w, h, light, plain(M.PRECIPITATION_RGB));
-  M.paintPrecipitationField(field(() => 20.0), w, h, heavy, plain(M.PRECIPITATION_RGB));
-  const mid = (Math.floor(h / 2) * w + Math.floor(w / 2)) * 4;
-  assert.ok(heavy[mid + 3] > light[mid + 3], 'a heavier band must be more opaque');
-  assert.deepEqual(light.slice(mid, mid + 3), heavy.slice(mid, mid + 3), 'the hue must not move');
-  void cells;
+  // A heavier band is more opaque while the colour stays put.
+  const light = plain(M.precipitationBand(M.samplePrecipitationField(field(() => 1.0), 0.5, 0.5)));
+  const heavy = plain(M.precipitationBand(M.samplePrecipitationField(field(() => 20.0), 0.5, 0.5)));
+  assert.ok(heavy.opacity > light.opacity, 'a heavier band must be more opaque');
+  assert.match(layer, /ctx\.fillStyle = Model\.PRECIPITATION_COLOR/);
+  assert.match(layer, /ctx\.globalAlpha = band\.opacity/);
 });
 
 test('R4: a value in the none band renders no marking', () => {
@@ -75,7 +70,7 @@ test('R4: an unavailable amount draws nothing', () => {
 test('R4: the amount is interpolated before it is banded', () => {
   // Banding first would step at cell edges; interpolating first makes the band
   // boundary follow the data.
-  assert.match(layer, /Model\.paintPrecipitationField\(/);
+  assert.match(layer, /Model\.precipitationBand\(Model\.samplePrecipitationField\(cells, u, v\)\)/);
   const cells = field((col) => (col === 3 ? 0 : (col === 4 ? 8 : 0)));
   const a = plain(M.gridPointFraction(3, 4));
   const b = plain(M.gridPointFraction(4, 4));
@@ -102,8 +97,9 @@ test('R4: every band is reachable and stronger than the one below', () => {
 });
 
 test('R4: the overlay re-derives on resize like the cloud field', () => {
-  // Fixed raster scaled to the item, so a resize needs no repaint at all.
-  assert.match(layer, /xScale: root\.width > 0 \? root\.width \/ canvas\.width : 1/);
-  assert.match(layer, /yScale: root\.height > 0 \? root\.height \/ canvas\.height : 1/);
-  assert.match(layer, /smooth: true/);
+  // Rect size is derived from the item size on every paint, so a resize is
+  // just another paint.
+  assert.match(layer, /var rectWidth = root\.width \/ columns/);
+  assert.match(layer, /var rectHeight = root\.height \/ rows/);
+  assert.match(layer, /onWidthChanged: requestPaint\(\)/);
 });

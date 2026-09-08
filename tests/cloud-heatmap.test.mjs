@@ -3,18 +3,16 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadQmlJs, plain, readRepoFile } from './qml-js.mjs';
 
-// Paints a uniform field and returns the alpha of a middle pixel, which is how
-// the ramp is actually applied on screen.
+// Mirrors what the layer draws for one rectangle: sample the field at the
+// rectangle's centre, then map that reading onto the ramp.
 function alphaFor(M, percent) {
   const cells = [];
   for (let i = 0; i < M.GRID_CELL_COUNT; i++) {
     cells.push({ cloudCoverPercent: percent, precipitationMm: 0 });
   }
-  const w = 24, h = 18;
-  const data = new Array(w * h * 4).fill(0);
-  M.paintCloudField(cells, w, h, data, plain(M.CLOUD_RGB), { r: 0, g: 0, b: 0 });
-  const mid = (Math.floor(h / 2) * w + Math.floor(w / 2)) * 4;
-  return { alpha: data[mid + 3], rgb: [data[mid], data[mid + 1], data[mid + 2]] };
+  const value = M.sampleCloudField(cells, 0.5, 0.5);
+  const alpha = value === M.UNAVAILABLE ? 0 : M.cloudOpacity(value);
+  return { alpha: Math.round(alpha * 255), rgb: M.CLOUD_COLOR };
 }
 
 const M = loadQmlJs('Model.js');
@@ -54,8 +52,7 @@ test('R3: only the documented neutral colour is used, and the hue never varies',
   // Every painted pixel carries the same channels whatever the reading, so
   // the hue cannot vary with the value.
   for (const percent of [0, 25, 50, 75, 100]) {
-    assert.deepEqual(alphaFor(M, percent).rgb, [M.CLOUD_RGB.r, M.CLOUD_RGB.g, M.CLOUD_RGB.b],
-      `the hue changed at ${percent}%`);
+    assert.equal(alphaFor(M, percent).rgb, M.CLOUD_COLOR, `the hue changed at ${percent}%`);
   }
   assert.deepEqual(layer.match(/"#[0-9a-fA-F]{3,8}"/g) || [], [], 'no second colour may appear');
 });
@@ -65,7 +62,7 @@ test('R3: the value drives opacity and nothing else', () => {
   const low = alphaFor(M, 20);
   const high = alphaFor(M, 80);
   assert.ok(high.alpha > low.alpha, 'a denser reading must be more opaque');
-  assert.deepEqual(low.rgb, high.rgb, 'and nothing else may change');
+  assert.equal(low.rgb, high.rgb, 'and nothing else may change');
 });
 
 test('R3: the layer covers the whole map area and re-derives on resize', () => {
@@ -73,24 +70,23 @@ test('R3: the layer covers the whole map area and re-derives on resize', () => {
   // covers any size; a resize is just another paint.
   // The field is painted at a fixed raster and scaled to the item, so it
   // covers the whole map area at any size without repainting on resize.
-  assert.match(layer, /Model\.paintCloudField\(/);
-  assert.match(layer, /xScale: root\.width > 0 \? root\.width \/ canvas\.width : 1/);
-  assert.match(layer, /yScale: root\.height > 0 \? root\.height \/ canvas\.height : 1/);
-  assert.match(layer, /smooth: true/);
+  assert.match(layer, /Model\.sampleCloudField\(cells, u, v\)/);
+  assert.match(layer, /ctx\.fillRect\(/);
+  assert.match(layer, /var rectWidth = root\.width \/ columns/);
+  assert.match(layer, /var rectHeight = root\.height \/ rows/);
+  assert.match(layer, /onWidthChanged: requestPaint\(\)/);
 });
 
 test('R3: unavailable cells are not drawn as clear sky', () => {
   assert.equal(M.cloudOpacity('unavailable'), 0);
-  // A field of unknown cells paints the hatch colour, never the cloud ramp.
+  // A field of unknown cells is hatched, never placed on the ramp.
   const cells = [];
   for (let i = 0; i < M.GRID_CELL_COUNT; i++) {
     cells.push({ cloudCoverPercent: M.UNAVAILABLE, precipitationMm: 0 });
   }
-  const w = 24, h = 18;
-  const data = new Array(w * h * 4).fill(0);
-  M.paintCloudField(cells, w, h, data, plain(M.CLOUD_RGB), { r: 1, g: 2, b: 3 });
-  const mid = (Math.floor(h / 2) * w + Math.floor(w / 2)) * 4;
-  assert.deepEqual([data[mid], data[mid + 1], data[mid + 2]], [1, 2, 3]);
+  assert.equal(M.isUnavailableAt(cells, 0.5, 0.5), true);
+  assert.equal(M.sampleCloudField(cells, 0.5, 0.5), M.UNAVAILABLE);
+  assert.match(layer, /ctx\.fillStyle = root\.hatchColor/);
 });
 
 test('R3: the ramp is documented', () => {

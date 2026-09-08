@@ -47,15 +47,34 @@ desktop unresponsive until it was restarted.
    by a wide margin. 273 ms measured in V8 for a 480x320 plain array was already
    too slow; the real thing was worse again.
 
-**What replaced it:** the layers paint a fixed `FIELD_RASTER_WIDTH` x
-`FIELD_RASTER_HEIGHT` (120x80) raster and the scene graph scales it to the map
-area with `smooth: true`. The upscale is linear filtering on the GPU — the same
-bilinear blend, for free. The field is only a 12x9 sample lattice, so 120x80 is
-still 10x oversampled and nothing visible is lost. `Model.MAX_RASTER_PIXELS` is
-a hard backstop: above it the painters return without touching the buffer, so
-the worst case is a blank layer rather than a wedged desktop.
+**What replaced it, and then also failed:** a fixed 120x80 `ImageData` raster
+scaled up by the scene graph. Instrumented logging showed the layer *is*
+instantiated (524x349, visible, `available` true) and that `onPaint` runs to
+completion — yet nothing appeared, including a plain full-canvas magenta
+`fillRect` probe. `createImageData`/`putImageData` therefore appear to be
+unusable in this Quickshell build even though the paint callback executes.
+
+**What the layers do now:** draw the field as a grid of `FIELD_RECT_COLUMNS` x
+`FIELD_RECT_ROWS` (120x90) rectangles, each filled from the bilinear sample at
+its centre, on a full-size Canvas. That is the same shape of drawing code as
+`Basemap.qml` and `CenterMarker.qml`, which demonstrably render in this shell —
+ordinary path and fill calls, no pixel buffer. ~10k fill calls per paint, and
+the shell's CPU does not move when it repaints.
 
 **Rules this leaves behind:**
 - Never benchmark QML canvas work in node and treat the number as representative.
 - Never size a per-pixel raster from an item's device-scaled dimensions.
 - Verify a paint in the real shell before syncing it to an installed plugin.
+
+
+## Screenshot-based verification became unreliable — CAUTION
+
+`grim` captured the screen successfully several times and then began timing out
+consistently (exit 124), after several concurrent `grim`/`magick` runs on a
+4000x2880 capture. Some intermediate screenshots may have been stale frames,
+which sent one round of diagnosis down the wrong path: a probe was concluded not
+to render when the log showed its paint had in fact completed.
+
+**Rule:** when a visual conclusion contradicts instrumented logging, trust the
+log and re-establish the capture before drawing any conclusion. Confirm what is
+on screen with the user rather than with a screenshot that may be stale.

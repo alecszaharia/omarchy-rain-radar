@@ -50,20 +50,12 @@ test('R3: the treatment differs in colour from the cloud ramp too', () => {
   // Hatched in the theme foreground, not the neutral cloud grey.
   assert.match(layer, /property color hatchColor/);
   assert.match(panel, /hatchColor: root\.foregroundColor/);
-  const w = 120, h = 90;
-  const data = new Array(w * h * 4).fill(0);
-  M.paintCloudField(cells, w, h, data, plain(M.CLOUD_RGB), { r: 7, g: 8, b: 9 });
-  let checked = 0;
-  for (let y = 0; y < h && checked < 40; y++) {
-    for (let x = 0; x < w && checked < 40; x++) {
-      if (!M.isUnavailableAt(cells, (x + 0.5) / w, (y + 0.5) / h)) continue;
-      const i = (y * w + x) * 4;
-      assert.deepEqual([data[i], data[i + 1], data[i + 2]], [7, 8, 9],
-        `the hatch must not use the cloud colour at ${x},${y}`);
-      checked += 1;
-    }
-  }
-  assert.ok(checked > 0, 'the fixture must contain hatched pixels');
+  // The hatch is filled with the theme colour, never the cloud colour.
+  assert.match(layer, /ctx\.fillStyle = root\.hatchColor/);
+  assert.match(layer, /ctx\.fillStyle = Model\.CLOUD_COLOR/);
+  const hatchAt = layer.indexOf('ctx.fillStyle = root.hatchColor');
+  const cloudAt = layer.indexOf('ctx.fillStyle = Model.CLOUD_COLOR');
+  assert.ok(hatchAt > 0 && cloudAt > hatchAt, 'the hatch branch comes first');
 });
 
 test('R3: cells adjacent to the unavailable one render from their own values', () => {
@@ -109,19 +101,12 @@ test('R3: nearest-cell attribution covers the whole map exactly once', () => {
 });
 
 test('R3: an unknown cell is never placed on the ramp', () => {
-  // The painter decides availability before it interpolates, so a hatched
-  // pixel can never also carry a cloud opacity.
-  const w = 120, h = 90;
-  const data = new Array(w * h * 4).fill(0);
-  M.paintCloudField(cells, w, h, data, plain(M.CLOUD_RGB), { r: 7, g: 8, b: 9 });
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      if (!M.isUnavailableAt(cells, (x + 0.5) / w, (y + 0.5) / h)) continue;
-      const i = (y * w + x) * 4;
-      assert.equal(data[i + 3], Math.round(M.hatchAlphaAt(x, y) * 255));
-    }
-  }
-  assert.match(layer, /Model\.paintCloudField\(/);
+  // Availability is decided before the field is sampled, so an unknown cell
+  // can never also carry a cloud opacity.
+  const checkAt = layer.indexOf('Model.isUnavailableAt(cells, u, v)');
+  const sampleAt = layer.indexOf('Model.sampleCloudField(cells, u, v)');
+  assert.ok(checkAt > 0 && sampleAt > checkAt, 'the unavailable check must come first');
+  assert.match(layer, /Model\.hatchAlphaAt\(/);
 });
 
 test('R3: the treatment is documented', () => {

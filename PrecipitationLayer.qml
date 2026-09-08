@@ -3,36 +3,49 @@ import "Model.js" as Model
 
 // Precipitation overlay — cavekit-map-rendering.md R4.
 //
-// Same fixed-raster approach as the cloud layer, and for the same reason.
-Item {
+// Same rasterisation as the cloud layer, and for the same reason. The amount is
+// interpolated first and banded afterwards, so a band edge follows the data
+// rather than the sampling lattice.
+Canvas {
   id: root
 
   property var gridModel: null
 
-  Canvas {
-    id: canvas
-    width: Model.FIELD_RASTER_WIDTH
-    height: Model.FIELD_RASTER_HEIGHT
-    smooth: true
-    antialiasing: true
+  onWidthChanged: requestPaint()
+  onHeightChanged: requestPaint()
+  onGridModelChanged: requestPaint()
+  onAvailableChanged: if (available) requestPaint()
 
-    transform: Scale {
-      xScale: root.width > 0 ? root.width / canvas.width : 1
-      yScale: root.height > 0 ? root.height / canvas.height : 1
+  onPaint: {
+    var ctx = getContext("2d")
+    ctx.reset()
+    if (root.width <= 0 || root.height <= 0) return
+    if (!root.gridModel || !root.gridModel.cells) return
+
+    var cells = root.gridModel.cells
+    var columns = Model.FIELD_RECT_COLUMNS
+    var rows = Model.FIELD_RECT_ROWS
+    var rectWidth = root.width / columns
+    var rectHeight = root.height / rows
+
+    ctx.fillStyle = Model.PRECIPITATION_COLOR
+
+    for (var ry = 0; ry < rows; ry++) {
+      var v = (ry + 0.5) / rows
+      for (var rx = 0; rx < columns; rx++) {
+        var u = (rx + 0.5) / columns
+
+        // A cell with no amount of its own draws nothing; a neighbour's amount
+        // must not be interpolated into it.
+        if (Model.isPrecipitationUnavailableAt(cells, u, v)) continue
+
+        var band = Model.precipitationBand(Model.samplePrecipitationField(cells, u, v))
+        if (band.opacity <= 0) continue
+
+        ctx.globalAlpha = band.opacity
+        ctx.fillRect(rx * rectWidth, ry * rectHeight, rectWidth + 1, rectHeight + 1)
+      }
     }
-
-    property var gridModel: root.gridModel
-    onGridModelChanged: requestPaint()
-
-    onPaint: {
-      var ctx = getContext("2d")
-      ctx.reset()
-      if (!root.gridModel || !root.gridModel.cells) return
-
-      var image = ctx.createImageData(canvas.width, canvas.height)
-      Model.paintPrecipitationField(root.gridModel.cells, canvas.width, canvas.height,
-                                    image.data, Model.PRECIPITATION_RGB)
-      ctx.putImageData(image, 0, 0)
-    }
+    ctx.globalAlpha = 1.0
   }
 }

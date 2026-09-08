@@ -59,17 +59,17 @@ test('R4: a cell with no precipitation reading draws no marking', () => {
   assert.equal(M.isPrecipitationUnavailableAt(cells, inside.u, inside.v), true,
     'that point still belongs to the cell with no reading');
 
-  // Painted, that whole region stays fully transparent.
-  const w = 120, h = 90;
-  const data = new Array(w * h * 4).fill(0);
-  M.paintPrecipitationField(cells, w, h, data, { r: 0, g: 0, b: 255 });
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const su = (x + 0.5) / w, sv = (y + 0.5) / h;
-      if (!M.isPrecipitationUnavailableAt(cells, su, sv)) continue;
-      assert.equal(data[(y * w + x) * 4 + 3], 0, `paint leaked into ${x},${y}`);
+  // Every rectangle whose centre falls in that cell is skipped outright.
+  let skipped = 0;
+  for (let ry = 0; ry < M.FIELD_RECT_ROWS; ry++) {
+    for (let rx = 0; rx < M.FIELD_RECT_COLUMNS; rx++) {
+      const su = (rx + 0.5) / M.FIELD_RECT_COLUMNS;
+      const sv = (ry + 0.5) / M.FIELD_RECT_ROWS;
+      if (M.isPrecipitationUnavailableAt(cells, su, sv)) skipped += 1;
     }
   }
+  assert.ok(skipped > 0, 'the unknown cell must cover some rectangles');
+  assert.match(layer, /if \(Model\.isPrecipitationUnavailableAt\(cells, u, v\)\) continue/);
 });
 
 test('R4: that cell still draws its cloud cover normally', () => {
