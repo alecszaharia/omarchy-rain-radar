@@ -388,3 +388,53 @@ function basemapStyle(region) {
     filled: false
   }
 }
+
+// ---------------------------------------------------------------------------
+// Parse boundary — cavekit-weather-data.md R3
+//
+// Everything the source sends crosses into the plugin here. A response that
+// cannot be turned into a whole grid model yields no model at all, and the
+// model already on screen survives the attempt: a bad refresh must never blank
+// out good data.
+// ---------------------------------------------------------------------------
+
+function parseGridModel(rawText, fetchedAt) {
+  var text = String(rawText === null || rawText === undefined ? "" : rawText)
+  if (text.replace(/^\s+|\s+$/g, "") === "") {
+    return { model: null, errorText: "Empty response from Open-Meteo" }
+  }
+
+  var parsed
+  try {
+    parsed = JSON.parse(text)
+  } catch (e) {
+    return { model: null, errorText: "Unreadable response from Open-Meteo" }
+  }
+
+  // Open-Meteo reports its own failures as an object with error/reason rather
+  // than an HTTP status, so a well-formed body can still be a failure.
+  if (parsed && parsed.error) {
+    return {
+      model: null,
+      errorText: String(parsed.reason || "Open-Meteo reported an error")
+    }
+  }
+
+  var model = buildGridModel(parsed, fetchedAt)
+  if (!model) {
+    return { model: null, errorText: "Incomplete response from Open-Meteo" }
+  }
+  return { model: model, errorText: "" }
+}
+
+// The model that stays published after an attempt. A failed attempt keeps
+// whatever was already there, including nothing.
+function nextPublishedModel(previous, parsed) {
+  return (parsed && parsed.model) ? parsed.model : previous
+}
+
+// The status an attempt's outcome implies, before staleness is considered.
+// Staleness and the error-over-stale precedence are applied in T-039/T-046.
+function statusForParse(parsed) {
+  return (parsed && parsed.model) ? STATUS.ready : STATUS.error
+}
