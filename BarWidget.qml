@@ -25,6 +25,29 @@ BarWidget {
     if (panelLoader.item && panelLoader.item.toggle) panelLoader.item.toggle()
   }
 
+  // Shape contract for shell summon/hide routing. Bar.findPanelWidget only
+  // considers a slot item that carries open(), close() and opened, and
+  // summonBarWidget/hideBarWidget then call them — so the bar-widget root, not
+  // the nested panel, has to expose them and forward to the panel.
+  readonly property bool opened: panelLoader.item ? panelLoader.item.opened === true : false
+
+  function open() {
+    if (panelLoader.item && panelLoader.item.open) panelLoader.item.open()
+  }
+
+  function close() {
+    if (panelLoader.item && panelLoader.item.close) panelLoader.item.close()
+  }
+
+  // The bar's popout coordinator prefers closeForPopoutSwitch over close when
+  // handing over to another panel, and reads popoutSwitchClosing back off the
+  // item it identified — this widget — so both are forwarded too.
+  readonly property bool popoutSwitchClosing: panelLoader.item ? panelLoader.item.popoutSwitchClosing === true : false
+
+  function closeForPopoutSwitch() {
+    if (panelLoader.item && panelLoader.item.closeForPopoutSwitch) panelLoader.item.closeForPopoutSwitch()
+  }
+
   implicitWidth: button.implicitWidth
   implicitHeight: button.implicitHeight
 
