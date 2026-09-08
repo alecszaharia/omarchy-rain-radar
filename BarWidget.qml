@@ -60,6 +60,10 @@ BarWidget {
     if (panelLoader.item && panelLoader.item.closeForPopoutSwitch) panelLoader.item.closeForPopoutSwitch()
   }
 
+  // Recomputed whenever the centre reading or the status changes.
+  readonly property var appearance: Model.barAppearance(
+    weather.gridModel ? weather.gridModel.center : null, weather.status)
+
   implicitWidth: button.implicitWidth
   implicitHeight: button.implicitHeight
 
@@ -83,10 +87,10 @@ BarWidget {
     id: button
     anchors.fill: parent
     bar: root.bar
-    // Glyph only — never a percentage, a label or a thumbnail. Empty until a
-    // centre reading resolves to a condition, which T-041 gives its own
-    // appearance rather than letting unknown data read as clear weather.
-    text: Model.barGlyph(weather.gridModel ? weather.gridModel.center : null)
+    // Glyph only — never a percentage, a label or a thumbnail. The glyph says
+    // what the weather is; the opacity says how much to trust it.
+    text: root.appearance.glyph
+    opacity: root.appearance.opacity
     slotSize: Style.bar.statusSlot
     // Suppressed: the popup is the detail view.
     tooltipText: ""

@@ -191,3 +191,27 @@ The hatched area is the unavailable cell's own region, decided by nearest grid
 point (`Model.nearestCellIndex`). Its neighbours are unaffected and keep
 rendering from their own readings, because the interpolation drops corners with
 no reading and renormalises the remaining weights.
+
+## Bar appearance by status
+
+The glyph says what the weather is; the opacity says how much to trust it
+(`Model.barAppearance`).
+
+| Status | Glyph | Opacity |
+| --- | --- | --- |
+| ready | the condition glyph | 1.0 |
+| stale | the condition glyph | 0.6 |
+| error | `U+E374` (weather "n/a") | 0.4 |
+| centre cloud unavailable, any status | `U+E374` | 0.4 |
+
+A centre with no usable cloud reading resolves to no condition and takes the
+same appearance as an error, so unknown data is never shown as clear weather.
+
+For a known condition the three states are distinguishable: ready is the glyph
+at full strength, stale is the same glyph dimmed, and error swaps the glyph *and*
+dims further.
+
+When the centre reading itself is unavailable the entry shows the unknown
+appearance regardless of status. That is deliberate and is what R7 asks for: the
+bar must never imply a reading it does not have, and "unknown" outranks "how old
+is this".

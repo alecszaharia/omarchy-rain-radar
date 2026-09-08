@@ -562,10 +562,10 @@ function precipitationBand(mm) {
 // Nerd Font weather glyphs, the same set Omarchy's own weather widget draws
 // from, so they are known to render in the bar's font.
 var BAR_GLYPHS = {
-  clear: "",
-  partlyCloudy: "",
-  overcast: "",
-  precipitating: ""
+  clear: "\ue30d",
+  partlyCloudy: "\ue302",
+  overcast: "\ue33d",
+  precipitating: "\ue318"
 }
 
 // Cloud cover breaks, in percent. Half-open like the precipitation bands:
@@ -926,4 +926,37 @@ function isUnavailableAt(cells, u, v) {
 function hatchAlphaAt(x, y) {
   var phase = (x + y) % UNAVAILABLE_HATCH_PERIOD
   return phase < UNAVAILABLE_HATCH_WIDTH ? UNAVAILABLE_HATCH_ALPHA : 0
+}
+
+// ---------------------------------------------------------------------------
+// Bar appearance by status — cavekit-map-rendering.md R7
+//
+// The glyph reports the weather; the appearance reports how much to trust it.
+// Documented in docs/rendering.md.
+// ---------------------------------------------------------------------------
+
+// The weather "n/a" glyph. Verified present in the JetBrainsMono Nerd Font
+// Omarchy ships, like the four condition glyphs.
+var BAR_UNKNOWN_GLYPH = "\ue374"
+
+var BAR_READY_OPACITY = 1.0
+var BAR_STALE_OPACITY = 0.6
+var BAR_ERROR_OPACITY = 0.4
+
+// { glyph, opacity } for the bar entry.
+//
+// A centre with no usable cloud reading resolves to no condition, and takes the
+// same appearance as an error: unknown data must never be shown as clear
+// weather. Stale keeps the condition glyph but dims it, so the three states stay
+// distinguishable even when the glyph itself is the unknown one.
+function barAppearance(center, status) {
+  var condition = barCondition(center)
+
+  if (status === STATUS.error || !condition) {
+    return { glyph: BAR_UNKNOWN_GLYPH, opacity: BAR_ERROR_OPACITY }
+  }
+  if (status === STATUS.stale) {
+    return { glyph: BAR_GLYPHS[condition], opacity: BAR_STALE_OPACITY }
+  }
+  return { glyph: BAR_GLYPHS[condition], opacity: BAR_READY_OPACITY }
 }

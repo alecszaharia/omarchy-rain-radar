@@ -13,7 +13,7 @@ const buttonBlock = (() => {
 })();
 
 test('R7: the bar entry renders a glyph and nothing else', () => {
-  assert.match(buttonBlock, /text: Model\.barGlyph\(/);
+  assert.match(buttonBlock, /text: root\.appearance\.glyph/);
   // No percentage, no label, no thumbnail.
   assert.ok(!/%/.test(buttonBlock), 'the bar entry must not show a percentage');
   assert.ok(!/Image\s*\{|Canvas\s*\{/.test(widget), 'the bar entry must not draw a map thumbnail');
@@ -34,7 +34,10 @@ test('R7: a fixture for each condition renders its documented glyph', () => {
 });
 
 test('R7: the glyph comes from the centre sample of the published model', () => {
-  assert.match(buttonBlock, /weather\.gridModel \? weather\.gridModel\.center : null/);
+  // Resolved once on the widget root and rendered by the button, so the glyph
+  // and its appearance cannot disagree.
+  assert.match(widget, /weather\.gridModel \? weather\.gridModel\.center : null/);
+  assert.match(widget, /readonly property var appearance: Model\.barAppearance\(/);
 });
 
 test('R7: with no model yet the bar entry shows no glyph', () => {
