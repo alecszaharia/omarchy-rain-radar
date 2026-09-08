@@ -810,3 +810,42 @@ function precipitationBandName(band) {
   if (!band || !band.id) return ""
   return band.id.charAt(0).toUpperCase() + band.id.slice(1)
 }
+
+// ---------------------------------------------------------------------------
+// Load-time refresh decision — cavekit-weather-data.md R4
+//
+// What to do the moment the widget comes up, given whatever the cache had. The
+// point is that a restart inside one interval does not spend a request: the
+// cached model is already current enough, and the next fetch is due at the
+// cached fetch time plus one interval, not one interval from now.
+// ---------------------------------------------------------------------------
+
+// Age of a model in milliseconds, or null when it cannot be dated.
+function modelAgeMs(model, now) {
+  if (!model) return null
+  var fetchedAt = parseDataTime(model.fetchedAt)
+  if (!fetchedAt) return null
+  var age = now.getTime() - fetchedAt.getTime()
+  // A fetch time in the future means a clock change, not a fresh model; treat
+  // it as unknown rather than trusting it.
+  return age < 0 ? null : age
+}
+
+// { fetchNow, nextFetchDelayMs }. nextFetchDelayMs is when the repeating
+// schedule should next fire, measured from now.
+function loadTimeDecision(model, now, intervalMs) {
+  var age = modelAgeMs(model, now)
+
+  // Nothing usable on disk: fetch immediately.
+  if (age === null) return { fetchNow: true, nextFetchDelayMs: intervalMs }
+
+  // Fresh: younger than one interval. Leave the network alone and let the
+  // schedule pick up where the cached fetch left off.
+  if (age < intervalMs) {
+    return { fetchNow: false, nextFetchDelayMs: intervalMs - age }
+  }
+
+  // Older than an interval: the cached model is still shown, but it is due a
+  // refresh now.
+  return { fetchNow: true, nextFetchDelayMs: intervalMs }
+}

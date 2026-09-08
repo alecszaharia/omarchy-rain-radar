@@ -134,6 +134,34 @@ QtObject {
     return true
   }
 
+  // ---- Load-time decision (R4) -------------------------------------------
+  // Runs once the cache read has answered, whichever way it went. A restart
+  // inside one interval spends no request: the schedule resumes from the
+  // cached fetch time rather than from now.
+
+  property bool startupHandled: false
+
+  onCacheCheckedChanged: root.handleStartup()
+
+  function handleStartup() {
+    if (root.startupHandled || !root.cacheChecked) return
+    root.startupHandled = true
+
+    var decision = Model.loadTimeDecision(root.gridModel, new Date(), root.refreshIntervalMs)
+    // Resume the repeating schedule at the cached model's own due time, then
+    // let it settle back to the full interval on the next tick.
+    resumeTimer.interval = Math.max(1, decision.nextFetchDelayMs)
+    resumeTimer.running = !decision.fetchNow
+    if (decision.fetchNow) root.refresh()
+  }
+
+  // One-shot catch-up timer for a cache that was still fresh at load.
+  property Timer resumeTimer: Timer {
+    repeat: false
+    running: false
+    onTriggered: root.refresh()
+  }
+
   // ---- Scheduling (R4) ---------------------------------------------------
   // The interval is a binding on the setting, so editing refreshMinutes
   // re-evaluates it and QML restarts the timer on the new period. That is what
