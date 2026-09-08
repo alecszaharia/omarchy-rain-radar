@@ -90,12 +90,10 @@ documented bands: none, light, moderate and heavy. Rain and snow are not disting
 - [ ] The four bands are visually distinct from one another at popup size. (human review)
 **Dependencies:** R3; cavekit-weather-data.md R3 (`cells[].precipitationMm`)
 
-### R5: Legend, timestamp, status and attribution
-**Description:** The popup shows a legend for both scales, the time of the displayed data, an indicator of the
-current status, and the required data attribution.
+### R5: Timestamp, status and attribution
+**Description:** The popup shows the time of the displayed data, an indicator of the current status, and the
+required data attribution.
 **Acceptance Criteria:**
-- [ ] A legend for the cloud-cover scale is visible in the popup, showing at minimum its 0% and 100% ends.
-- [ ] A legend for the four precipitation bands is visible in the popup, labelled with their thresholds.
 - [ ] The popup shows "Updated HH:MM" derived from the displayed model's `dataTime`.
 - [ ] Each of the four statuses `loading`, `ready`, `stale`, `error` produces a distinct, documented
       presentation in the popup.
@@ -188,6 +186,8 @@ the same fixed grid. It is view state, not a user setting.
 ## Changelog
 - 2026-09-04: Initial draft from the approved design (context/refs/approved-design-cloud-radar.md).
 - 2026-09-04: Reviewer pass 1 — clarified grid cell-centre convention, setting clamping, cache-fresh scheduling, fixed timeout/retry constants, unavailable-data handling.
+- 2026-09-08: R5 loses its two legend criteria at the user's request; the popup no longer shows a legend for
+  either scale. The scales themselves are unchanged and remain documented in docs/rendering.md.
 - 2026-09-08: R7 corrected — `error` no longer replaces the condition glyph. The original criterion tied the
   error appearance to the unknown-data appearance, which made the bar report "no data" whenever a refresh
   failed even though a cached reading was on screen and the popup was drawing it.

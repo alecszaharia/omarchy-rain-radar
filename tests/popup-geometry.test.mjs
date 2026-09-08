@@ -42,9 +42,8 @@ test('R6: the requested geometry fits inside 1280x720', () => {
 
   const width = M.POPUP_CONTENT_WIDTH;
   const mapHeight = width / M.MAP_ASPECT;
-  // Title, map, and generous headroom for the legends, timestamp and status
-  // block that land in T-033 and T-042.
-  const contentHeight = 24 + mapHeight + 160;
+  // Title, map, and headroom for the controls, timestamp and status block.
+  const contentHeight = 24 + mapHeight + 120;
   const verticalInset = 14 * 2 + 2;
 
   assert.ok(width <= availableWidth, `width ${width} exceeds ${availableWidth}`);

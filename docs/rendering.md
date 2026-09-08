@@ -30,7 +30,7 @@ At the smallest supported screen, 1280x720 logical pixels with a top bar:
 | `availableCardWidth` | `1280 - margin * 2` = 1270 |
 | `availableCardHeight` | `720 - (barHeight + gap + margin)` ≈ 670 |
 | Requested content width | 480 |
-| Requested content height | title + map (480 / 1.5 = 320) + legends and status |
+| Requested content height | title + map (480 / 1.5 = 320) + controls and status |
 
 The requested width is well inside the available width, and the clamp means a
 smaller screen, a larger spacing scale or a side bar shrinks the popup instead
@@ -96,9 +96,8 @@ like heavy overcast — reported from the running plugin as "too much clouds" on
 a day the sky was nearly clear, while the readings under Chișinău were 1–7%.
 Holding the low and middle of the range back makes thin cover read as thin.
 
-The legend draws stops taken from this same curve (`Model.cloudLegendStops`),
-so the key cannot disagree with the map. A straight gradient beside a curved
-ramp would misstate every value on it. The hue never varies with the value, so a viewer reads
+The popup shows no legend — it was removed at the user's request — so these
+numbers are documented here rather than on screen. The hue never varies with the value, so a viewer reads
 density rather than decoding a palette, and nothing on this layer can be
 confused with the blue precipitation overlay above it.
 

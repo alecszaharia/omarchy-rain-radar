@@ -138,7 +138,7 @@ Panel {
         }
 
         // The map surface. Cloud heatmap, precipitation overlay, the Chisinau
-        // marker, legends and the status block layer in from T-023 onward.
+        // marker and the status block layer in from T-023 onward.
         Item {
           id: mapArea
           width: parent.width
@@ -231,90 +231,6 @@ Panel {
             opacity: 0.7
             font.family: root.themeFontFamily
             font.pixelSize: Style.font.bodySmall
-          }
-        }
-
-        // ---- Legends (R5) ------------------------------------------------
-
-        // Cloud cover: the scale is opacity, so the legend is the same colour
-        // ramped from transparent to full, with both ends labelled.
-        Row {
-          width: parent.width
-          spacing: Style.space(8)
-
-          Text {
-            id: cloudScaleMin
-            text: "0%"
-            anchors.verticalCenter: parent.verticalCenter
-            color: root.foregroundColor
-            font.family: root.themeFontFamily
-            font.pixelSize: Style.font.bodySmall
-          }
-
-          Rectangle {
-            width: parent.width - cloudScaleMin.width - cloudScaleMax.width - Style.space(16)
-            height: Style.space(10)
-            anchors.verticalCenter: parent.verticalCenter
-            radius: Style.space(2)
-            // Stops taken from the same curve the map uses, so the key cannot
-            // disagree with what is drawn.
-            gradient: Gradient {
-              orientation: Gradient.Horizontal
-
-              GradientStop { position: 0.0; color: "transparent" }
-
-              Repeater {
-                model: Model.cloudLegendStops(6).slice(1)
-                GradientStop {
-                  position: modelData.position
-                  color: Qt.rgba(Model.CLOUD_RGB.r / 255, Model.CLOUD_RGB.g / 255,
-                                 Model.CLOUD_RGB.b / 255, modelData.opacity)
-                }
-              }
-            }
-          }
-
-          Text {
-            id: cloudScaleMax
-            text: "100% cloud"
-            anchors.verticalCenter: parent.verticalCenter
-            color: root.foregroundColor
-            font.family: root.themeFontFamily
-            font.pixelSize: Style.font.bodySmall
-          }
-        }
-
-        // Precipitation: one swatch per band at the band's own opacity, each
-        // labelled with the millimetre threshold it covers.
-        Flow {
-          width: parent.width
-          spacing: Style.space(10)
-
-          Repeater {
-            model: Model.PRECIPITATION_BANDS
-
-            Row {
-              spacing: Style.space(4)
-
-              Rectangle {
-                width: Style.space(12)
-                height: Style.space(10)
-                anchors.verticalCenter: parent.verticalCenter
-                radius: Style.space(2)
-                color: Model.PRECIPITATION_COLOR
-                opacity: modelData.opacity
-                border.width: modelData.opacity === 0 ? 1 : 0
-                border.color: root.foregroundColor
-              }
-
-              Text {
-                text: Model.precipitationBandName(modelData) + " " + Model.precipitationBandLabel(modelData)
-                anchors.verticalCenter: parent.verticalCenter
-                color: root.foregroundColor
-                font.family: root.themeFontFamily
-                font.pixelSize: Style.font.bodySmall
-              }
-            }
           }
         }
 

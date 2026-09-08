@@ -895,31 +895,8 @@ function samplePrecipitationField(cells, u, v) {
 }
 
 
-// Human-readable threshold for a precipitation band, used by the popup legend.
-// Opacity stops for the cloud legend, so the key shows the same curve the map
-// draws rather than a straight ramp that would disagree with it.
-function cloudLegendStops(count) {
-  var steps = (typeof count === "number" && count >= 2) ? Math.round(count) : 5
-  var stops = []
-  for (var i = 0; i < steps; i++) {
-    var position = i / (steps - 1)
-    stops.push({ position: position, opacity: cloudOpacity(position * 100) })
-  }
-  return stops
-}
 
-function precipitationBandLabel(band) {
-  if (!band) return ""
-  if (band.maxMm === Infinity) return band.minMm + "+ mm"
-  if (band.minMm === 0) return "< " + band.maxMm + " mm"
-  return band.minMm + "-" + band.maxMm + " mm"
-}
 
-// Title case for a band id, so the legend reads "Light" rather than "light".
-function precipitationBandName(band) {
-  if (!band || !band.id) return ""
-  return band.id.charAt(0).toUpperCase() + band.id.slice(1)
-}
 
 // ---------------------------------------------------------------------------
 // Load-time refresh decision — cavekit-weather-data.md R4

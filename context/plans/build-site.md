@@ -5,7 +5,7 @@ last_edited: "2026-09-08T06:37:19Z"
 
 # Build Site
 
-61 tasks across 13 tiers from 3 kits.
+60 tasks across 13 tiers from 3 kits.
 
 Cloud Radar (`io.github.alecszaharia.cloud-radar`) — Omarchy 4 bar-widget plugin. Greenfield: no source
 exists yet. Runtime is QML/Quickshell under the Omarchy shell (`manifest.json` schemaVersion 1, root type
@@ -69,7 +69,6 @@ bar-widget entry point) unblocks both other domains.
 | T-030 | Fetch-lifecycle status transitions (`loading`, `loading→ready`, `→error`, `error→ready`) | weather-data | R6 | T-021, T-020, T-003 | M |
 | T-031 | Bilinear interpolation of the cloud field between grid points | map-rendering | R3 | T-024 | M |
 | T-032 | Precipitation overlay renderer composited above the cloud layer, blue-only | map-rendering | R4 | T-025, T-024 | M |
-| T-033 | Cloud-scale legend and precipitation-band legend labelled with thresholds | map-rendering | R5 | T-009, T-024, T-025 | M |
 | T-034 | Bar icon glyph renderer: glyph only, bar foreground colour, four condition fixtures | map-rendering | R7 | T-026, T-001 | M |
 | T-035 | Human review — basemap legibility on light/dark themes and Moldova distinguishability | map-rendering | R2 | T-023, T-017 | S |
 
@@ -160,7 +159,8 @@ configurable center and extent remain out.
 | 10 | 2 | 2 | 0 | 0 |
 | 11 | 1 | 1 | 0 | 0 |
 
-**Total: 61 tasks — 32 S, 29 M, 0 L — across 13 tiers.**
+**Total: 60 tasks — 32 S, 28 M, 0 L — across 13 tiers.** T-033 (legends) was withdrawn when the
+user asked for the legend to be removed; R5's two legend criteria went with it.
 
 Per-kit distribution: weather-data 24 tasks (R1–R6), map-rendering 22 tasks (R1–R7), plugin-packaging 14
 tasks (R1–R6). Widest parallel front is Tier 2 / Tier 3 / Tier 5 at 9 tasks each.
@@ -248,8 +248,6 @@ tasks (R1–R6). Widest parallel front is Tier 2 / Tier 3 / Tier 5 at 9 tasks ea
 | map-rendering | R4 | Rain and snow fixtures with the same amount render identically | T-047 | COVERED |
 | map-rendering | R4 | Unavailable precipitation + numeric cloud → no marking, cloud drawn normally | T-047 | COVERED |
 | map-rendering | R4 | The four bands are visually distinct at popup size (human review) | T-044 | COVERED |
-| map-rendering | R5 | Cloud-cover legend visible showing at minimum its 0% and 100% ends | T-033 | COVERED |
-| map-rendering | R5 | Precipitation legend visible for four bands, labelled with thresholds | T-033 | COVERED |
 | map-rendering | R5 | Popup shows "Updated HH:MM" derived from the model's `dataTime` | T-027 | COVERED |
 | map-rendering | R5 | Each of the four statuses has a distinct documented popup presentation | T-042 | COVERED |
 | map-rendering | R5 | In `stale`, a stale indicator is visible and the map remains visible | T-042 | COVERED |
@@ -323,7 +321,7 @@ tasks (R1–R6). Widest parallel front is Tier 2 / Tier 3 / Tier 5 at 9 tasks ea
 | map-rendering | R8 | Zoom is not a user setting; exactly one remains declared | T-061 | COVERED |
 | map-rendering | R8 | Zoom-in and zoom-out controls, inactive at their limits, plus wheel zoom | T-061 | COVERED |
 
-**Coverage: 153/153 criteria (100%)**
+**Coverage: 151/151 criteria (100%)**
 
 Documentation-producing tasks (each writes the documentation its criterion demands): T-015 (Moldova emphasis
 rule), T-017 (popup width constant), T-025 (precipitation mm band thresholds), T-026 (bar glyph threshold
@@ -362,7 +360,6 @@ graph LR
     T-009 --> T-017
     T-009 --> T-018
     T-009 --> T-027
-    T-009 --> T-033
     T-009 --> T-042
     T-009 --> T-048
     T-011 --> T-019
@@ -388,9 +385,7 @@ graph LR
     T-023 --> T-035
     T-024 --> T-031
     T-024 --> T-032
-    T-024 --> T-033
     T-025 --> T-032
-    T-025 --> T-033
     T-026 --> T-034
     T-028 --> T-036
     T-028 --> T-037
@@ -404,7 +399,6 @@ graph LR
     T-031 --> T-043
     T-032 --> T-044
     T-032 --> T-047
-    T-033 --> T-057
     T-034 --> T-041
     T-036 --> T-049
     T-036 --> T-050

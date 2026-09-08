@@ -4,8 +4,9 @@ An Omarchy 4 bar widget showing a cloud-cover map of Eastern Europe centred on
 Chișinău, Moldova, with a precipitation overlay.
 
 The bar entry is an icon only — it reports the condition at the centre. Clicking
-it opens a popup with the map, a legend for both scales, the time of the reading
-and a refresh button.
+it opens a popup with the map, the time of the reading, refresh and zoom
+controls. The scales are documented in `docs/rendering.md` rather than shown on
+the map.
 
 ## Install
 

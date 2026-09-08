@@ -93,3 +93,10 @@ Build site: context/plans/build-site.md
 - The kit itself was wrong here, not just the code: R7 tied the error appearance to the unknown-data appearance. That made the bar claim "no reading" while the popup was drawing a map from a perfectly good cached one.
 - Corrected at the source: R7 now states that a usable centre reading keeps being reported in every status, and that the unknown glyph is reserved for having no reading at all. Statuses stay distinguishable by opacity (1.0 / 0.6 / 0.4).
 - Tests: 366 passing.
+
+### Wave 12 — legend removed — 2026-09-08
+- Requested by the user. R5 loses its two legend criteria; T-033 withdrawn from the build site; coverage now 151/151.
+- Removed with it, as production code that no longer had a consumer: Model.cloudLegendStops, precipitationBandLabel, precipitationBandName, and tests/legends.test.mjs.
+- The scales themselves are unchanged and stay documented in docs/rendering.md.
+- Popup content is now: title, map, controls (Refresh / - / +), status, "Updated HH:MM", attribution.
+- Tests: 361 passing.

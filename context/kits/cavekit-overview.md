@@ -20,7 +20,7 @@ Source of truth for scope: `context/refs/approved-design-cloud-radar.md` (approv
 | Domain | Cavekit File | Requirements | Status | Description |
 | --- | --- | --- | --- | --- |
 | Weather Data | cavekit-weather-data.md | 6 (R1–R6) | DRAFT | Sampling grid, single Open-Meteo fetch, grid-model normalization, refresh scheduling, on-disk cache and the observable status. Owns the data → rendering interface contract. |
-| Map Rendering | cavekit-map-rendering.md | 8 (R1–R8) | DRAFT | Projection, bundled basemap outlines and Chișinău marker, cloud heatmap, precipitation overlay, legend/status/attribution, popup chrome and bar icon. |
+| Map Rendering | cavekit-map-rendering.md | 8 (R1–R8) | DRAFT | Projection, bundled basemap outlines and Chișinău marker, cloud heatmap, precipitation overlay, timestamp/status/attribution, popup chrome, bar icon and zoom. |
 | Plugin Packaging | cavekit-plugin-packaging.md | 6 (R1–R6) | DRAFT | Manifest and single settings entry, validator and linter cleanliness, install and bar placement, lifecycle hygiene, docs and catalog artifacts, dependency budget. |
 
 ## Cross-Reference Map
@@ -57,9 +57,9 @@ Weather Data  ---- grid model (R3) + status (R6) ---->  Map Rendering
 | Cavekit | Requirements | Acceptance Criteria |
 | --- | --- | --- |
 | cavekit-weather-data.md | 6 | 49 |
-| cavekit-map-rendering.md | 8 | 65 |
+| cavekit-map-rendering.md | 8 | 63 |
 | cavekit-plugin-packaging.md | 6 | 39 |
-| **Total** | **20** | **153** |
+| **Total** | **20** | **151** |
 
 Four acceptance criteria are flagged `(human review)` — all in cavekit-map-rendering.md R2, R3 and R4 —
 covering theme legibility, Moldova's distinguishability at popup size, heatmap smoothness, and precipitation
@@ -74,3 +74,4 @@ notifications.
 - 2026-09-04: Initial draft index for the three approved domains.
 - 2026-09-04: Reviewer passes 1–2 applied to domain kits; criteria counts refreshed.
 - 2026-09-08: Map Rendering gains R8 (zoom) at the user's request; counts refreshed.
+- 2026-09-08: R5 loses its two legend criteria at the user's request; counts refreshed.
