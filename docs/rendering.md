@@ -240,3 +240,37 @@ how much to trust it.
 
 Ready deliberately says nothing. An indicator for the normal case would be
 noise, and saying nothing is itself distinct from the other three.
+
+## Zoom
+
+The map shows a window onto the sampled area. `Model.viewportFor(zoom)` returns
+that window; every layer projects and samples through it, so they can never
+disagree about what is on screen.
+
+| Constant | Value |
+| --- | --- |
+| `Model.ZOOM_MIN` | 1.0 — the window is exactly the sampled bounds |
+| `Model.ZOOM_MAX` | 4.0 |
+| `Model.ZOOM_STEP` | 0.5 per button press or wheel notch |
+
+The window is centred on Chișinău and its span is the full span divided by the
+zoom level, so the aspect ratio the projection depends on is the same at every
+level.
+
+Where a centred window would run past an edge it is **shifted back inside the
+bounds, never shrunk** — shrinking would change the aspect ratio. This is not a
+hypothetical: Chișinău sits slightly north of the bounds' centre, so at
+`ZOOM_MIN` a centred window would overhang the northern edge by 0.01°. Shifting
+is what makes `viewportFor(ZOOM_MIN)` exactly equal to the bounds.
+
+Zoom never asks the source for anything. It is a window onto data already
+fetched, so zooming in shows the same 12×9 readings interpolated across a
+smaller area — more detail in the drawing, not more detail in the data. The
+weather service knows nothing about it.
+
+Zoom is view state rather than a setting. The plugin declares exactly one user
+setting, and how far the map is zoomed is not worth persisting.
+
+Controls: `−` and `+` in the popup, greyed at the limits, and the mouse wheel
+over the map itself. The wheel uses a `WheelHandler` rather than a `MouseArea`
+so it does not swallow presses meant for the popup.

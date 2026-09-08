@@ -11,15 +11,19 @@ Canvas {
 
   property var gridModel: null
 
+  // The geographic window currently on screen (Model.viewportFor).
+  property var viewport: null
+
   onWidthChanged: requestPaint()
   onHeightChanged: requestPaint()
   onGridModelChanged: requestPaint()
+  onViewportChanged: requestPaint()
   onAvailableChanged: if (available) requestPaint()
 
   onPaint: {
     var ctx = getContext("2d")
     ctx.reset()
-    if (root.width <= 0 || root.height <= 0) return
+    if (root.width <= 0 || root.height <= 0 || !root.viewport) return
     if (!root.gridModel || !root.gridModel.cells) return
 
     var cells = root.gridModel.cells
@@ -31,15 +35,15 @@ Canvas {
     ctx.fillStyle = Model.PRECIPITATION_COLOR
 
     for (var ry = 0; ry < rows; ry++) {
-      var v = (ry + 0.5) / rows
+      var gv = Model.viewToGridV((ry + 0.5) / rows, root.viewport)
       for (var rx = 0; rx < columns; rx++) {
-        var u = (rx + 0.5) / columns
+        var gu = Model.viewToGridU((rx + 0.5) / columns, root.viewport)
 
         // A cell with no amount of its own draws nothing; a neighbour's amount
         // must not be interpolated into it.
-        if (Model.isPrecipitationUnavailableAt(cells, u, v)) continue
+        if (Model.isPrecipitationUnavailableAt(cells, gu, gv)) continue
 
-        var band = Model.precipitationBand(Model.samplePrecipitationField(cells, u, v))
+        var band = Model.precipitationBand(Model.samplePrecipitationField(cells, gu, gv))
         if (band.opacity <= 0) continue
 
         ctx.globalAlpha = band.opacity

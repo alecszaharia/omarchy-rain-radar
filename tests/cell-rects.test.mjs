@@ -2,11 +2,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadQmlJs, plain } from './qml-js.mjs';
+import { FULL_VIEW, cellRects } from './geo.mjs';
 
 const M = loadQmlJs('Model.js');
 const SIZES = [[480, 320], [300, 200], [960, 640], [1200, 800], [481, 321]];
 
-function rectsAt(w, h) { return plain(M.cellRects(w, h)); }
+function rectsAt(w, h) { return cellRects(w, h); }
 
 test('R1: each of the 108 cells maps to a rectangle', () => {
   for (const [w, h] of SIZES) {
@@ -50,7 +51,7 @@ test('R1: each grid point projects to the centre of its rectangle', () => {
   for (const [w, h] of SIZES) {
     const rects = rectsAt(w, h);
     for (let i = 0; i < points.length; i++) {
-      const p = plain(M.projectPoint(points[i].lon, points[i].lat, w, h));
+      const p = plain(M.projectPoint(points[i].lon, points[i].lat, w, h, FULL_VIEW));
       const r = rects[i];
       assert.ok(Math.abs(p.x - (r.x + r.width / 2)) < 1e-9, `cell ${i} x at ${w}x${h}`);
       assert.ok(Math.abs(p.y - (r.y + r.height / 2)) < 1e-9, `cell ${i} y at ${w}x${h}`);

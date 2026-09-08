@@ -145,13 +145,34 @@ error.
 - [ ] The bar entry uses the bar's foreground colour rather than a hard-coded colour.
 **Dependencies:** cavekit-weather-data.md R3 (`center`), R6 (status enum)
 
+### R8: Zoom
+**Description:** The map draws a window onto the sampled area, which the user can narrow and widen. The
+window is centred on Chișinău, keeps the aspect ratio of the sampled bounds, and never extends beyond them.
+Zoom changes only what is drawn: it requests nothing further from the source, and the readings behind it are
+the same fixed grid. It is view state, not a user setting.
+**Acceptance Criteria:**
+- [ ] At the minimum zoom level the window equals the sampled bounds exactly.
+- [ ] Zooming in produces a strictly smaller window in both longitude and latitude.
+- [ ] At every level the window's aspect ratio equals that of the sampled bounds.
+- [ ] At no level does the window extend outside the sampled bounds.
+- [ ] The zoom range and the step between levels are documented constants, and a value outside the range or
+      not a number resolves to the minimum.
+- [ ] The centre coordinate remains within the map area at every level.
+- [ ] Every drawn layer projects and samples through the same window.
+- [ ] Zooming issues no outbound request and does not alter the published grid model.
+- [ ] Zoom is not exposed as a user setting; the plugin still declares exactly one.
+- [ ] The popup offers a zoom-in and a zoom-out control, each inactive at its limit, and the map zooms on
+      the mouse wheel without intercepting presses meant for the popup.
+**Dependencies:** R1 (projection); consumed by R2, R3, R4 (every layer draws through the window)
+
 ## Out of Scope
 - Fetching, scheduling, retrying or caching weather data (see cavekit-weather-data.md).
 - The plugin manifest, settings UI, installation and catalog artifacts (see cavekit-plugin-packaging.md).
 - Forecast timeline or animation playback.
 - Hover readout or any per-point value inspection.
 - Click-through to the built-in weather panel.
-- Configurable center, zoom or extent controls.
+- Configurable center or extent controls; the center is fixed on Chișinău and the sampled extent
+  never changes. Zoom is in scope (R8) and changes only the window drawn, never the data fetched.
 - Rendering low/mid/high cloud layers or distinguishing rain from snow.
 - City labels and any network-fetched map tiles.
 - A settings UI beyond the single refresh-interval setting declared by packaging.
@@ -164,4 +185,5 @@ error.
 ## Changelog
 - 2026-09-04: Initial draft from the approved design (context/refs/approved-design-cloud-radar.md).
 - 2026-09-04: Reviewer pass 1 — clarified grid cell-centre convention, setting clamping, cache-fresh scheduling, fixed timeout/retry constants, unavailable-data handling.
+- 2026-09-08: Added R8 (zoom) at the user's request; zoom removed from Out of Scope, center and extent stay out.
 - 2026-09-04: Reviewer pass 2 (advisory) — neutral-colour rule scoped to numeric cells, minimum screen size 1280×720, unavailable-precipitation rule for the bar glyph.

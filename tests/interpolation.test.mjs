@@ -2,6 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadQmlJs, plain, readRepoFile } from './qml-js.mjs';
+import { FULL_VIEW, gridPointFraction } from './geo.mjs';
 
 const M = loadQmlJs('Model.js');
 const layer = readRepoFile('CloudLayer.qml');
@@ -17,7 +18,7 @@ function field(valueAt) {
   return cells;
 }
 
-const at = (col, row) => plain(M.gridPointFraction(col, row));
+const at = (col, row) => (gridPointFraction(col, row));
 
 test('R3: the field reproduces each reading at its own grid point', () => {
   const cells = field((col, row) => (col * 7 + row * 3) % 101);
@@ -102,7 +103,7 @@ test('R3: a field with no usable reading anywhere is unavailable', () => {
 test('R3: the layer paints the interpolated field into the canvas buffer', () => {
   // Rectangles sampled at their centres from the interpolated field — not one
   // reading per cell, which would show the 12x9 lattice.
-  assert.match(layer, /Model\.sampleCloudField\(cells, u, v\)/);
+  assert.match(layer, /Model\.sampleCloudField\(cells, gu, gv\)/);
   assert.match(layer, /var columns = Model\.FIELD_RECT_COLUMNS/);
   assert.ok(M.FIELD_RECT_COLUMNS > M.GRID_COLUMNS, 'the rect grid must be finer than the cells');
 });

@@ -36,6 +36,17 @@ Panel {
   readonly property var statusPresentation: Model.statusPresentation(root.dataStatus)
   readonly property bool refreshing: weather ? weather.fetching : false
 
+  // View state, deliberately not a setting: the plugin declares exactly one,
+  // and how far the map is zoomed is not worth persisting.
+  property real zoom: Model.ZOOM_MIN
+  readonly property var viewport: Model.viewportFor(root.zoom)
+  readonly property bool canZoomIn: root.zoom < Model.ZOOM_MAX
+  readonly property bool canZoomOut: root.zoom > Model.ZOOM_MIN
+
+  function zoomBy(steps) {
+    root.zoom = Model.clampZoom(root.zoom + steps * Model.ZOOM_STEP)
+  }
+
   // The popup's refresh control goes through the service's single-flight guard,
   // so pressing it during a fetch coalesces onto the request already running
   // rather than starting another.
@@ -51,6 +62,42 @@ Panel {
     if (root.bar && typeof root.bar.switchPanelFrom === "function")
       return root.bar.switchPanelFrom(root.barIdentity, direction)
     return false
+  }
+
+  // One definition for the popup's three buttons; they differ only in label,
+  // whether they are actionable, and what they do.
+  component PillButton: Rectangle {
+    id: pill
+
+    property alias label: pillLabel.text
+    property bool actionable: true
+    signal activated()
+
+    width: pillLabel.implicitWidth + Style.space(16)
+    height: pillLabel.implicitHeight + Style.space(8)
+    radius: Style.space(4)
+    color: pillArea.containsMouse && pill.actionable
+      ? Style.hoverFillFor(root.foregroundColor, Color.accent)
+      : "transparent"
+    border.width: 1
+    border.color: root.foregroundColor
+    opacity: pill.actionable ? 1.0 : 0.4
+
+    Text {
+      id: pillLabel
+      anchors.centerIn: parent
+      color: root.foregroundColor
+      font.family: root.themeFontFamily
+      font.pixelSize: Style.font.bodySmall
+    }
+
+    MouseArea {
+      id: pillArea
+      anchors.fill: parent
+      hoverEnabled: true
+      cursorShape: Qt.PointingHandCursor
+      onClicked: if (pill.actionable) pill.activated()
+    }
   }
 
   KeyboardPanel {
@@ -103,55 +150,60 @@ Panel {
           // when it matters most.
           Basemap {
             anchors.fill: parent
+            viewport: root.viewport
             strokeColor: root.foregroundColor
           }
 
           CloudLayer {
             anchors.fill: parent
+            viewport: root.viewport
             gridModel: root.gridModel
             hatchColor: root.foregroundColor
           }
 
           PrecipitationLayer {
             anchors.fill: parent
+            viewport: root.viewport
             gridModel: root.gridModel
           }
 
           CenterMarker {
             anchors.fill: parent
+            viewport: root.viewport
             markerColor: root.foregroundColor
+          }
+
+          // Wheel zoom over the map itself. A handler rather than a MouseArea,
+          // so it does not swallow clicks meant for the popup.
+          WheelHandler {
+            acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+            onWheel: function(event) {
+              root.zoomBy(event.angleDelta.y > 0 ? 1 : -1)
+            }
           }
         }
 
-        // ---- Refresh control (R6) ------------------------------------------
+        // ---- Controls (R6, R8) ---------------------------------------------
 
-        Rectangle {
-          id: refreshControl
-          width: refreshLabel.implicitWidth + Style.space(16)
-          height: refreshLabel.implicitHeight + Style.space(8)
-          radius: Style.space(4)
-          color: refreshArea.containsMouse && !root.refreshing
-            ? Style.hoverFillFor(root.foregroundColor, Color.accent)
-            : "transparent"
-          border.width: 1
-          border.color: root.foregroundColor
-          opacity: root.refreshing ? 0.5 : 1.0
+        Row {
+          spacing: Style.space(8)
 
-          Text {
-            id: refreshLabel
-            anchors.centerIn: parent
-            text: root.refreshing ? "Refreshing…" : "Refresh"
-            color: root.foregroundColor
-            font.family: root.themeFontFamily
-            font.pixelSize: Style.font.bodySmall
+          PillButton {
+            label: root.refreshing ? "Refreshing…" : "Refresh"
+            actionable: !root.refreshing
+            onActivated: root.requestRefresh()
           }
 
-          MouseArea {
-            id: refreshArea
-            anchors.fill: parent
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            onClicked: root.requestRefresh()
+          PillButton {
+            label: "\u2212"
+            actionable: root.canZoomOut
+            onActivated: root.zoomBy(-1)
+          }
+
+          PillButton {
+            label: "+"
+            actionable: root.canZoomIn
+            onActivated: root.zoomBy(1)
           }
         }
 

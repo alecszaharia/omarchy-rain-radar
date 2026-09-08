@@ -2,6 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadQmlJs, plain, readRepoFile } from './qml-js.mjs';
+import { FULL_VIEW, gridPointFraction } from './geo.mjs';
 import { rainResponse, snowResponse } from './fixtures/make.mjs';
 
 const M = loadQmlJs('Model.js');
@@ -47,7 +48,7 @@ test('R4: a cell with no precipitation reading draws no marking', () => {
       });
     }
   }
-  const p = plain(M.gridPointFraction(5, 4));
+  const p = (gridPointFraction(5, 4));
   assert.equal(M.isPrecipitationUnavailableAt(cells, p.u, p.v), true);
 
   // Just inside that cell, away from its centre, the drenched neighbours do
@@ -69,7 +70,7 @@ test('R4: a cell with no precipitation reading draws no marking', () => {
     }
   }
   assert.ok(skipped > 0, 'the unknown cell must cover some rectangles');
-  assert.match(layer, /if \(Model\.isPrecipitationUnavailableAt\(cells, u, v\)\) continue/);
+  assert.match(layer, /if \(Model\.isPrecipitationUnavailableAt\(cells, gu, gv\)\) continue/);
 });
 
 test('R4: that cell still draws its cloud cover normally', () => {
@@ -83,7 +84,7 @@ test('R4: that cell still draws its cloud cover normally', () => {
       });
     }
   }
-  const p = plain(M.gridPointFraction(5, 4));
+  const p = (gridPointFraction(5, 4));
   // The R3 hatch keys on cloud cover alone, so a missing amount does not
   // trigger it.
   assert.equal(M.isUnavailableAt(cells, p.u, p.v), false);
@@ -100,7 +101,7 @@ test('R4: the R3 hatch applies only when the cloud cover itself is unknown', () 
       });
     }
   }
-  const p = plain(M.gridPointFraction(5, 4));
+  const p = (gridPointFraction(5, 4));
   assert.equal(M.isUnavailableAt(cells, p.u, p.v), true);
   // And a known amount on that same cell is still precipitation.
   assert.equal(M.isPrecipitationUnavailableAt(cells, p.u, p.v), false);

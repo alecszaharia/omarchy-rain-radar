@@ -2,6 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadQmlJs, plain, readRepoFile } from './qml-js.mjs';
+import { FULL_VIEW, gridPointFraction } from './geo.mjs';
 
 const M = loadQmlJs('Model.js');
 const marker = readRepoFile('CenterMarker.qml');
@@ -9,7 +10,7 @@ const basemap = readRepoFile('Basemap.qml');
 const panel = readRepoFile('Panel.qml');
 
 test('R2: the marker is drawn at the projected centre coordinate', () => {
-  assert.match(marker, /Model\.projectPoint\(Model\.GRID_CENTER\.lon, Model\.GRID_CENTER\.lat,\s*root\.width, root\.height\)/);
+  assert.match(marker, /Model\.projectPoint\(Model\.GRID_CENTER\.lon, Model\.GRID_CENTER\.lat,\s*root\.width, root\.height, root\.viewport\)/);
   const c = plain(M.GRID_CENTER);
   assert.equal(c.lat, 47.01);
   assert.equal(c.lon, 28.86);
@@ -18,7 +19,7 @@ test('R2: the marker is drawn at the projected centre coordinate', () => {
 test('R2: the marker lands at the centre of the map area', () => {
   const W = 480, H = W / M.MAP_ASPECT;
   const c = plain(M.GRID_CENTER);
-  const p = plain(M.projectPoint(c.lon, c.lat, W, H));
+  const p = plain(M.projectPoint(c.lon, c.lat, W, H, FULL_VIEW));
   assert.ok(Math.abs(p.x - W / 2) <= 0.01 * W);
   assert.ok(Math.abs(p.y - H / 2) <= 0.01 * H);
 });

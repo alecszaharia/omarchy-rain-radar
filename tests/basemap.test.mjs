@@ -2,6 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadQmlJs, plain, readRepoFile } from './qml-js.mjs';
+import { FULL_VIEW, gridPointFraction } from './geo.mjs';
 
 const M = loadQmlJs('Model.js');
 const outlines = plain(loadQmlJs('data/Outlines.js').OUTLINES);
@@ -67,7 +68,7 @@ test('R2: outlines are stroked in the bar foreground, not a fixed palette', () =
 
 test('R2: the projection is re-derived on every paint', () => {
   // No cached pixel geometry, so a resize is just another paint.
-  assert.match(basemap, /Model\.projectPoint\(ring\[i\], ring\[i \+ 1\], root\.width, root\.height\)/);
+  assert.match(basemap, /Model\.projectPoint\(ring\[i\], ring\[i \+ 1\], root\.width, root\.height, root\.viewport\)/);
   assert.match(basemap, /onWidthChanged: requestPaint\(\)/);
   assert.match(basemap, /onHeightChanged: requestPaint\(\)/);
 });

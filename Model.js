@@ -106,34 +106,81 @@ var GRID_LAT_SPAN = GRID_BOUNDS.maxLat - GRID_BOUNDS.minLat
 // aspect ratio of the bounds (18 degrees of longitude by 12 of latitude).
 var MAP_ASPECT = GRID_LON_SPAN / GRID_LAT_SPAN
 
-// Fraction of the map area's width at the given longitude. minLon maps to 0
-// and maxLon to 1, increasing monotonically in between.
-function projectLonFraction(lon) {
-  return (lon - GRID_BOUNDS.minLon) / GRID_LON_SPAN
+// Fraction of the map area's width at the given longitude within `view`:
+// view.minLon maps to 0 and view.maxLon to 1, increasing monotonically.
+function projectLonFraction(lon, view) {
+  return (lon - view.minLon) / (view.maxLon - view.minLon)
 }
 
-// Fraction of the map area's height at the given latitude. maxLat (north) maps
-// to 0 and minLat (south) to 1, so increasing latitude decreases the vertical
-// position as screen coordinates require.
-function projectLatFraction(lat) {
-  return (GRID_BOUNDS.maxLat - lat) / GRID_LAT_SPAN
+// Fraction of the map area's height at the given latitude. view.maxLat (north)
+// maps to 0 and view.minLat (south) to 1, so increasing latitude decreases the
+// vertical position as screen coordinates require.
+function projectLatFraction(lat, view) {
+  return (view.maxLat - lat) / (view.maxLat - view.minLat)
 }
 
-function projectPoint(lon, lat, width, height) {
+function projectPoint(lon, lat, width, height, view) {
   return {
-    x: projectLonFraction(lon) * width,
-    y: projectLatFraction(lat) * height
+    x: projectLonFraction(lon, view) * width,
+    y: projectLatFraction(lat, view) * height
   }
 }
 
-// Units per degree along each axis. Both are independent of position — that is
-// what makes the projection free of differential stretching — so a single pair
-// describes the whole map area.
-function projectionScale(width, height) {
+
+// ---------------------------------------------------------------------------
+// Zoom — cavekit-map-rendering.md R8
+//
+// Zoom shows a smaller window of the same sampled area; it never asks the
+// source for more. The window keeps the bounds' aspect ratio and is centred on
+// Chisinau, shifted back inside the bounds when that would run past an edge, so
+// the map can never show ground the source did not report.
+// ---------------------------------------------------------------------------
+
+var ZOOM_MIN = 1.0
+var ZOOM_MAX = 4.0
+var ZOOM_STEP = 0.5
+
+function clampZoom(zoom) {
+  if (typeof zoom !== "number" || !isFinite(zoom)) return ZOOM_MIN
+  if (zoom < ZOOM_MIN) return ZOOM_MIN
+  if (zoom > ZOOM_MAX) return ZOOM_MAX
+  return zoom
+}
+
+// The geographic window shown at a zoom level. At ZOOM_MIN this is exactly the
+// sampled bounds.
+function viewportFor(zoom) {
+  var level = clampZoom(zoom)
+  var lonSpan = GRID_LON_SPAN / level
+  var latSpan = GRID_LAT_SPAN / level
+
+  var minLon = GRID_CENTER.lon - lonSpan / 2
+  var minLat = GRID_CENTER.lat - latSpan / 2
+
+  // Shifted rather than shrunk: the window keeps its span, and with it the
+  // aspect ratio the projection depends on.
+  if (minLon < GRID_BOUNDS.minLon) minLon = GRID_BOUNDS.minLon
+  if (minLon + lonSpan > GRID_BOUNDS.maxLon) minLon = GRID_BOUNDS.maxLon - lonSpan
+  if (minLat < GRID_BOUNDS.minLat) minLat = GRID_BOUNDS.minLat
+  if (minLat + latSpan > GRID_BOUNDS.maxLat) minLat = GRID_BOUNDS.maxLat - latSpan
+
   return {
-    xPerLon: width / GRID_LON_SPAN,
-    yPerLat: height / GRID_LAT_SPAN
+    minLon: minLon,
+    maxLon: minLon + lonSpan,
+    minLat: minLat,
+    maxLat: minLat + latSpan
   }
+}
+
+// Map-area fraction to grid-space fraction, so the field can be sampled through
+// whatever window is on screen. Split per axis so a caller looping rows can
+// resolve the vertical term once per row instead of once per rectangle.
+function viewToGridU(u, view) {
+  return ((view.minLon + u * (view.maxLon - view.minLon)) - GRID_BOUNDS.minLon) / GRID_LON_SPAN
+}
+
+function viewToGridV(v, view) {
+  return (GRID_BOUNDS.maxLat - (view.maxLat - v * (view.maxLat - view.minLat))) / GRID_LAT_SPAN
 }
 
 // ---------------------------------------------------------------------------
@@ -319,25 +366,6 @@ function refreshIntervalMs(value) {
   return effectiveRefreshMinutes(value) * 60 * 1000
 }
 
-// Rectangle for each of the 108 cells, in cells[] order, covering the map area
-// exactly. Derived from the projection, so a resize is just a fresh call with
-// the new size rather than a second source of truth.
-function cellRects(width, height) {
-  var cellWidth = width / GRID_COLUMNS
-  var cellHeight = height / GRID_ROWS
-  var rects = []
-  for (var row = 0; row < GRID_ROWS; row++) {
-    for (var col = 0; col < GRID_COLUMNS; col++) {
-      rects.push({
-        x: col * cellWidth,
-        y: row * cellHeight,
-        width: cellWidth,
-        height: cellHeight
-      })
-    }
-  }
-  return rects
-}
 
 // ---------------------------------------------------------------------------
 // Popup geometry — cavekit-map-rendering.md R6
@@ -844,14 +872,6 @@ function samplePrecipitationField(cells, u, v) {
   return sampleField(cells, u, v, "precipitationMm")
 }
 
-// Fractional map position of a grid point, for callers that need to sample at
-// a known reading.
-function gridPointFraction(col, row) {
-  return {
-    u: (col + 0.5) / GRID_COLUMNS,
-    v: (row + 0.5) / GRID_ROWS
-  }
-}
 
 // Human-readable threshold for a precipitation band, used by the popup legend.
 function precipitationBandLabel(band) {

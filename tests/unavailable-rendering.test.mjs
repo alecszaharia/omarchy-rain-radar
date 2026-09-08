@@ -2,6 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadQmlJs, plain, readRepoFile } from './qml-js.mjs';
+import { FULL_VIEW, gridPointFraction } from './geo.mjs';
 
 const M = loadQmlJs('Model.js');
 const layer = readRepoFile('CloudLayer.qml');
@@ -25,7 +26,7 @@ function fixture(unavailableCol, unavailableRow) {
 
 const COL = 5, ROW = 4;
 const cells = fixture(COL, ROW);
-const at = (col, row) => plain(M.gridPointFraction(col, row));
+const at = (col, row) => (gridPointFraction(col, row));
 
 test('R3: the unavailable cell renders with the distinct treatment', () => {
   const p = at(COL, ROW);
@@ -103,8 +104,8 @@ test('R3: nearest-cell attribution covers the whole map exactly once', () => {
 test('R3: an unknown cell is never placed on the ramp', () => {
   // Availability is decided before the field is sampled, so an unknown cell
   // can never also carry a cloud opacity.
-  const checkAt = layer.indexOf('Model.isUnavailableAt(cells, u, v)');
-  const sampleAt = layer.indexOf('Model.sampleCloudField(cells, u, v)');
+  const checkAt = layer.indexOf('Model.isUnavailableAt(cells, gu, gv)');
+  const sampleAt = layer.indexOf('Model.sampleCloudField(cells, gu, gv)');
   assert.ok(checkAt > 0 && sampleAt > checkAt, 'the unavailable check must come first');
   assert.match(layer, /Model\.hatchAlphaAt\(/);
 });

@@ -33,3 +33,4 @@ Build site: context/plans/build-site.md
 | T-044 | PENDING-HUMAN | Precipitation band distinctness at popup size. Needs the running plugin. |
 | T-047 | DONE | Rain/snow parity structural (no breakdown requested or modelled); unavailable precip skipped before interpolation. 7 tests. |
 | T-048 | DONE | Themed refresh button -> requestManualRefresh; popup has no path to the process. 6 tests. |
+| T-061 | DONE | R8 zoom. Model.viewportFor/clampZoom/viewToGridU/V; all four layers project and sample through the viewport; PillButton component drives Refresh and both zoom controls; WheelHandler on the map. Removed cellRects/projectionScale/gridPointFraction from Model.js (test-only, now in tests/geo.mjs). 14 tests. |

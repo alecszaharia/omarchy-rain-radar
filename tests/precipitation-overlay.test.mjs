@@ -2,6 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadQmlJs, plain, readRepoFile } from './qml-js.mjs';
+import { FULL_VIEW, gridPointFraction } from './geo.mjs';
 
 const M = loadQmlJs('Model.js');
 const layer = readRepoFile('PrecipitationLayer.qml');
@@ -70,10 +71,10 @@ test('R4: an unavailable amount draws nothing', () => {
 test('R4: the amount is interpolated before it is banded', () => {
   // Banding first would step at cell edges; interpolating first makes the band
   // boundary follow the data.
-  assert.match(layer, /Model\.precipitationBand\(Model\.samplePrecipitationField\(cells, u, v\)\)/);
+  assert.match(layer, /Model\.precipitationBand\(Model\.samplePrecipitationField\(cells, gu, gv\)\)/);
   const cells = field((col) => (col === 3 ? 0 : (col === 4 ? 8 : 0)));
-  const a = plain(M.gridPointFraction(3, 4));
-  const b = plain(M.gridPointFraction(4, 4));
+  const a = (gridPointFraction(3, 4));
+  const b = (gridPointFraction(4, 4));
   const mid = M.samplePrecipitationField(cells, (a.u + b.u) / 2, a.v);
   assert.ok(mid > 0 && mid < 8, `midpoint ${mid} must lie between the readings`);
   // Which means the intermediate bands are actually reachable across a ramp.

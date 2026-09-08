@@ -15,16 +15,20 @@ Canvas {
   // the opacities the emphasis rule prescribes.
   property color strokeColor: "transparent"
 
+  // The geographic window currently on screen (Model.viewportFor).
+  property var viewport: null
+
   // Repaint whenever the size or the theme colour changes: the projection is
   // re-derived from the current size on every paint, so a resize needs nothing
   // but a fresh pass.
   onWidthChanged: requestPaint()
   onHeightChanged: requestPaint()
   onStrokeColorChanged: requestPaint()
+  onViewportChanged: requestPaint()
 
   function tracePath(ctx, ring) {
     for (var i = 0; i < ring.length; i += 2) {
-      var point = Model.projectPoint(ring[i], ring[i + 1], root.width, root.height)
+      var point = Model.projectPoint(ring[i], ring[i + 1], root.width, root.height, root.viewport)
       if (i === 0) ctx.moveTo(point.x, point.y)
       else ctx.lineTo(point.x, point.y)
     }
@@ -34,7 +38,7 @@ Canvas {
   onPaint: {
     var ctx = getContext("2d")
     ctx.reset()
-    if (root.width <= 0 || root.height <= 0) return
+    if (root.width <= 0 || root.height <= 0 || !root.viewport) return
 
     ctx.lineJoin = "round"
     ctx.lineCap = "round"

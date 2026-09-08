@@ -11,17 +11,21 @@ Canvas {
 
   property color markerColor: "transparent"
 
+  // The geographic window currently on screen (Model.viewportFor).
+  property var viewport: null
+
   onWidthChanged: requestPaint()
   onHeightChanged: requestPaint()
   onMarkerColorChanged: requestPaint()
+  onViewportChanged: requestPaint()
 
   onPaint: {
     var ctx = getContext("2d")
     ctx.reset()
-    if (root.width <= 0 || root.height <= 0) return
+    if (root.width <= 0 || root.height <= 0 || !root.viewport) return
 
     var point = Model.projectPoint(Model.GRID_CENTER.lon, Model.GRID_CENTER.lat,
-                                   root.width, root.height)
+                                   root.width, root.height, root.viewport)
 
     ctx.strokeStyle = root.markerColor
     ctx.fillStyle = root.markerColor

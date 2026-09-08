@@ -70,3 +70,11 @@ Build site: context/plans/build-site.md
 - Tier gates 5-7: SKIPPED (codex unauthenticated).
 - Tests: 340 passing. 49/60 tasks complete.
 - STOPPED: the remaining 11 tasks all need either a live Omarchy shell or human eyes. Waiting on the user.
+
+### Wave 9 — Tier 12 (post-map addition) — 2026-09-08
+- T-061: zoom — DONE. Requested directly by the user; cavekit-map-rendering.md gains R8 and zoom leaves Out of Scope (center and extent stay out). Gate P. Acceptance 10/10.
+- Projection now takes a viewport: viewportFor(zoom) is centred on Chisinau, keeps the bounds' aspect ratio, and is shifted rather than shrunk at the edges so viewportFor(ZOOM_MIN) equals the bounds exactly.
+- Layers sample through viewToGridU/V, hoisting the vertical term per row.
+- Removed from Model.js as test-only code that was shipping to users: cellRects, projectionScale, gridPointFraction. They now live in tests/geo.mjs.
+- Three near-identical button blocks collapsed into one PillButton inline component.
+- Tests: 358 passing.

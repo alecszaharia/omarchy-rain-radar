@@ -5,7 +5,7 @@ last_edited: "2026-09-08T06:37:19Z"
 
 # Build Site
 
-60 tasks across 12 tiers from 3 kits.
+61 tasks across 13 tiers from 3 kits.
 
 Cloud Radar (`io.github.alecszaharia.cloud-radar`) — Omarchy 4 bar-widget plugin. Greenfield: no source
 exists yet. Runtime is QML/Quickshell under the Omarchy shell (`manifest.json` schemaVersion 1, root type
@@ -133,6 +133,16 @@ bar-widget entry point) unblocks both other domains.
 |------|-------|---------|-------------|-----------|--------|
 | T-060 | Catalog submission metadata matching manifest id, name, version and description | plugin-packaging | R5 | T-058, T-059, T-005 | S |
 
+## Tier 12 — Added after the original site
+
+| Task | Title | Cavekit | Requirement | blockedBy | Effort |
+|------|-------|---------|-------------|-----------|--------|
+| T-061 | Zoom: viewport model, layer wiring, popup controls and wheel | map-rendering | R8 | T-032, T-048 | M |
+
+Requested directly by the user on 2026-09-08, after the original site was
+mapped. cavekit-map-rendering.md gains R8 and zoom leaves its Out of Scope list;
+configurable center and extent remain out.
+
 ## Summary
 
 | Tier | Tasks | S | M | L |
@@ -150,7 +160,7 @@ bar-widget entry point) unblocks both other domains.
 | 10 | 2 | 2 | 0 | 0 |
 | 11 | 1 | 1 | 0 | 0 |
 
-**Total: 60 tasks — 32 S, 28 M, 0 L — across 12 tiers.**
+**Total: 61 tasks — 32 S, 29 M, 0 L — across 13 tiers.**
 
 Per-kit distribution: weather-data 24 tasks (R1–R6), map-rendering 22 tasks (R1–R7), plugin-packaging 14
 tasks (R1–R6). Widest parallel front is Tier 2 / Tier 3 / Tier 5 at 9 tasks each.
@@ -302,8 +312,18 @@ tasks (R1–R6). Widest parallel front is Tier 2 / Tier 3 / Tier 5 at 9 tasks ea
 | plugin-packaging | R6 | No external runtime dependency beyond components shipped with Omarchy 4 | T-055 | COVERED |
 | plugin-packaging | R6 | Install and enable on stock Omarchy 4 requires no additional packages | T-055 | COVERED |
 | plugin-packaging | R6 | All plugin functionality operates without elevated privileges | T-055 | COVERED |
+| map-rendering | R8 | At minimum zoom the window equals the sampled bounds exactly | T-061 | COVERED |
+| map-rendering | R8 | Zooming in produces a strictly smaller window in both axes | T-061 | COVERED |
+| map-rendering | R8 | The window's aspect ratio matches the bounds at every level | T-061 | COVERED |
+| map-rendering | R8 | The window never extends outside the sampled bounds | T-061 | COVERED |
+| map-rendering | R8 | Range and step are documented; out-of-range resolves to the minimum | T-061 | COVERED |
+| map-rendering | R8 | The centre remains within the map area at every level | T-061 | COVERED |
+| map-rendering | R8 | Every drawn layer projects and samples through the same window | T-061 | COVERED |
+| map-rendering | R8 | Zooming issues no request and does not alter the published model | T-061 | COVERED |
+| map-rendering | R8 | Zoom is not a user setting; exactly one remains declared | T-061 | COVERED |
+| map-rendering | R8 | Zoom-in and zoom-out controls, inactive at their limits, plus wheel zoom | T-061 | COVERED |
 
-**Coverage: 143/143 criteria (100%)**
+**Coverage: 153/153 criteria (100%)**
 
 Documentation-producing tasks (each writes the documentation its criterion demands): T-015 (Moldova emphasis
 rule), T-017 (popup width constant), T-025 (precipitation mm band thresholds), T-026 (bar glyph threshold
@@ -416,6 +436,8 @@ graph LR
     T-057 --> T-059
     T-056 --> T-058
     T-058 --> T-060
+    T-032 --> T-061
+    T-048 --> T-061
     T-059 --> T-060
 ```
 
