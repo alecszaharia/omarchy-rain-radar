@@ -35,6 +35,33 @@ var GRID_CENTER = {
   lon: 28.86
 }
 
+// Every sampled point, in the order consumers must preserve: the 108 cell
+// centres row-major from the north-west corner (row 0 is the northernmost),
+// then the exact centre sample last at index 108. The order is derived purely
+// from the constants above, so two calls always agree — the grid model's
+// cells[] and the fetch's coordinate lists are indexed by it.
+function gridPoints() {
+  var points = []
+  for (var row = 0; row < GRID_ROWS; row++) {
+    for (var col = 0; col < GRID_COLUMNS; col++) {
+      points.push({
+        lat: GRID_BOUNDS.maxLat - GRID_LAT_STEP * (row + 0.5),
+        lon: GRID_BOUNDS.minLon + GRID_LON_STEP * (col + 0.5)
+      })
+    }
+  }
+  // The centre is sampled exactly rather than read off the nearest cell, so the
+  // bar glyph reports Chisinau itself.
+  points.push({ lat: GRID_CENTER.lat, lon: GRID_CENTER.lon })
+  return points
+}
+
+// Index of the centre sample within gridPoints(). Named so consumers never
+// hard-code 108.
+var GRID_CELL_COUNT = GRID_COLUMNS * GRID_ROWS
+var GRID_CENTER_INDEX = GRID_CELL_COUNT
+var GRID_POINT_COUNT = GRID_CELL_COUNT + 1
+
 // ---------------------------------------------------------------------------
 // Observable status — cavekit-weather-data.md R6
 //
