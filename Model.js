@@ -174,12 +174,36 @@ function responseDataTime(locations) {
   return ""
 }
 
+// Cloud cover is a percentage. Anything that is not a finite number inside
+// 0..100 is unknown, and unknown is never 0: an absent reading and a clear sky
+// must not render the same way.
+function normalizeCloudCover(value) {
+  if (typeof value !== "number" || !isFinite(value)) return UNAVAILABLE
+  if (value < 0 || value > 100) return UNAVAILABLE
+  return value
+}
+
+// Precipitation is a millimetre amount, so any finite value from 0 upwards is
+// meaningful. Negative amounts are not physical and read as unknown.
+function normalizePrecipitation(value) {
+  if (typeof value !== "number" || !isFinite(value)) return UNAVAILABLE
+  if (value < 0) return UNAVAILABLE
+  return value
+}
+
+// A location the source dropped keeps its slot: the entry is present but
+// carries no current block, so the cell is unknown while every other cell stays
+// on its own reading. Silently closing the gap instead would shift every
+// following cell onto its neighbour's data.
 function measurementsAt(locations, index) {
   var entry = locations[index]
   var current = entry ? entry.current : null
+  if (!current) {
+    return { cloudCoverPercent: UNAVAILABLE, precipitationMm: UNAVAILABLE }
+  }
   return {
-    cloudCoverPercent: current ? current.cloud_cover : UNAVAILABLE,
-    precipitationMm: current ? current.precipitation : UNAVAILABLE
+    cloudCoverPercent: normalizeCloudCover(current.cloud_cover),
+    precipitationMm: normalizePrecipitation(current.precipitation)
   }
 }
 
