@@ -28,8 +28,9 @@ test('R5: the cached model is published before any network result', () => {
   assert.match(service, /onLoaded: root\.restoreFromCache\(text\(\)\)/);
   const restore = service.slice(service.indexOf('function restoreFromCache'));
   assert.match(restore, /root\.gridModel = restored/);
-  // A network result that already landed wins over the cache.
-  assert.match(restore, /if \(root\.gridModel\) return false/);
+  // A model already on screen is only replaced by a strictly newer one, which
+  // is how a peer instance's result arrives without undoing our own.
+  assert.match(restore, /candidate\.getTime\(\) <= current\.getTime\(\)\)\) return false/);
 });
 
 test('R5: a corrupt or unreadable cache is ignored', () => {

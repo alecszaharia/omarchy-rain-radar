@@ -78,3 +78,11 @@ Build site: context/plans/build-site.md
 - Removed from Model.js as test-only code that was shipping to users: cellRects, projectionScale, gridPointFraction. They now live in tests/geo.mjs.
 - Three near-identical button blocks collapsed into one PillButton inline component.
 - Tests: 358 passing.
+
+### Wave 10 — rate-limit defect — 2026-09-08
+- Reported by the user: Open-Meteo limit exceeded. Confirmed live: HTTP 429.
+- Cause: Omarchy creates one bar widget per monitor; WeatherData lived inside the widget, so a 3-monitor desktop ran three independent services, three timers and 327 location-calls per cycle (~23,500/day against ~10,000 guidance). The risk was flagged when T-034 wired the service into the bar widget and then not acted on — that was the mistake.
+- Aggravated during this session by development churn: every plugin rebuild re-ran the load-time fetch on all three instances.
+- Fix: cache file is now watched, so a peer's result propagates instead of being re-fetched; restoreFromCache adopts a strictly newer model only; scheduled ticks go through refreshIfDue, which reuses loadTimeDecision so there is one definition of "due"; per-instance period offset stops ticks landing together. Manual refresh deliberately still bypasses the due check.
+- Rejected: a plugin-local QML singleton. qmllint resolves `import "."` with a qmldir, but an untested import under Quickshell's loader could brick the widget on the next restart, and it could not be verified without one.
+- Tests: 365 passing.

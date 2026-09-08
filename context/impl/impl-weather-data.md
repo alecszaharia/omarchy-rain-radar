@@ -28,3 +28,4 @@ Build site: context/plans/build-site.md
 | T-039 | DONE | STALE_INTERVAL_MULTIPLIER=2, isStale, re-evaluated on a 30s tick + after fetch/restore. Boundary is fresh; undatable is not stale. 9 tests. |
 | T-045 | DONE | Fetch protocol changed to -sS + -w status tail; 429 -> backoff 2x interval, abandons retry burst. Verified live (HTTP 200, 109 entries). 11 tests. |
 | T-046 | DONE | Model.resolveStatus centralises error-over-stale precedence; field guarantees asserted directly. 9 tests. |
+| T-062 | DONE | One fetch per interval across monitors. A bar exists per monitor, so this service did too and each fetched all 109 points independently — 3x the request budget on a 3-monitor desktop, which exhausted Open-Meteo's free tier (observed HTTP 429). Peers now converge through the watched cache file, scheduled ticks defer via loadTimeDecision, and periods are offset per instance. 7 tests. |

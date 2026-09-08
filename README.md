@@ -51,6 +51,13 @@ roughly 7,800 location-calls a day, comfortably inside their published guidance.
 At the 10-minute minimum it is roughly 15,700, which exceeds it — so treat the
 short end of the range as something to use briefly, not as a daily setting.
 
+That budget holds regardless of how many monitors you have. Omarchy creates one
+bar widget per monitor, so the plugin runs one copy of its data service per
+monitor, but they share a single cached result: whichever copy is due first
+fetches and writes the cache, and the others see a model that is already fresh
+and stand down. Refreshes are also offset slightly per copy so their timers do
+not fire together.
+
 ## What it shows
 
 - **Cloud cover** as the opacity of a single neutral grey, interpolated between

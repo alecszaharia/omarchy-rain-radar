@@ -161,7 +161,11 @@ QtObject {
 
   property FileView cacheFile: FileView {
     path: root.cachePath
-    watchChanges: false
+    // Watched, because a bar exists per monitor and so does this service. When
+    // one instance writes a result the others pick it up here instead of
+    // fetching the same 109 points again.
+    watchChanges: true
+    onFileChanged: reload()
     // The state file is rewritten whole on every success, so a torn write
     // would leave an unreadable cache behind.
     atomicWrites: true
@@ -194,8 +198,15 @@ QtObject {
     root.cacheChecked = true
     var restored = Model.deserializeCache(rawText)
     if (!restored) return false
-    // A network result that already landed always wins over the cache.
-    if (root.gridModel) return false
+
+    // A peer's result arrives through this file, so a cached model is adopted
+    // when it is newer than what is on screen — but never when it is older,
+    // which is what keeps our own fresher fetch from being undone.
+    if (root.gridModel) {
+      var current = Model.parseDataTime(root.gridModel.fetchedAt)
+      var candidate = Model.parseDataTime(restored.fetchedAt)
+      if (!candidate || (current && candidate.getTime() <= current.getTime())) return false
+    }
 
     root.gridModel = restored
     // Staleness is applied in T-039; a restored model starts as ready, dated
@@ -268,13 +279,27 @@ QtObject {
   readonly property int refreshIntervalMs: Model.refreshIntervalMs(root.refreshMinutesSetting)
   readonly property int effectiveRefreshMinutes: Model.effectiveRefreshMinutes(root.refreshMinutesSetting)
 
+  // Bars exist per monitor, so this service does too. Offsetting each
+  // instance's period keeps their ticks from landing together: the first to
+  // fire fetches and writes the cache, and the others then see a model that is
+  // already fresh and stand down. One fetch per interval across all monitors
+  // rather than one per monitor.
+  readonly property int scheduleOffsetMs: Math.round(Math.random() * 45000)
+
+  // A scheduled tick refreshes only if the model is actually due. The same
+  // rule the load-time decision uses, so there is one definition of "due".
+  function refreshIfDue() {
+    if (!Model.loadTimeDecision(root.gridModel, new Date(), root.refreshIntervalMs).fetchNow) return false
+    return root.refresh()
+  }
+
   property Timer refreshTimer: Timer {
-    interval: root.refreshIntervalMs
+    interval: root.refreshIntervalMs + root.scheduleOffsetMs
     repeat: true
     running: true
     // The first fetch is decided by the load-time rule in T-036, not by the
     // timer, so this only drives the repeating schedule.
     triggeredOnStart: false
-    onTriggered: root.refresh()
+    onTriggered: root.refreshIfDue()
   }
 }

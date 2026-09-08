@@ -34,7 +34,9 @@ test('R4: the schedule repeats and drives a refresh', () => {
   const timerBlock = service.slice(service.indexOf('property Timer refreshTimer'));
   assert.match(timerBlock, /repeat: true/);
   assert.match(timerBlock, /running: true/);
-  assert.match(timerBlock, /onTriggered: root\.refresh\(\)/);
+  // Through the due check, so a monitor whose peer already refreshed stands
+  // down instead of fetching the same points again.
+  assert.match(timerBlock, /onTriggered: root\.refreshIfDue\(\)/);
 });
 
 test('R4: a scheduled tick cannot stack a second request', () => {
