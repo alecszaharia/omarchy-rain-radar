@@ -255,3 +255,42 @@ function requestUrl() {
     "&current=" + OPEN_METEO_CURRENT +
     "&timezone=GMT"
 }
+
+// ---------------------------------------------------------------------------
+// Refresh interval — cavekit-weather-data.md R4
+//
+// The plugin's only user setting. The shell hands over whatever sits in the
+// widget's shell.json entry, which may be absent, out of range or not a number
+// at all, so the effective interval is always derived rather than trusted.
+// ---------------------------------------------------------------------------
+
+var REFRESH_MINUTES_MIN = 10
+var REFRESH_MINUTES_MAX = 120
+var REFRESH_MINUTES_DEFAULT = 20
+
+function effectiveRefreshMinutes(value) {
+  // Only numbers and numeric strings are meaningful. Booleans in particular
+  // must not slip through Number()'s coercion and become a 1-minute interval.
+  if (typeof value === "number") {
+    if (!isFinite(value)) return REFRESH_MINUTES_DEFAULT
+  } else if (typeof value === "string") {
+    var trimmed = value.replace(/^\s+|\s+$/g, "")
+    // Number("") is 0, and a trailing-garbage string like "15min" must not be
+    // read as 15, so the whole string has to look like a number.
+    if (trimmed === "" || !/^[+-]?\d+(\.\d+)?$/.test(trimmed)) return REFRESH_MINUTES_DEFAULT
+    value = Number(trimmed)
+    if (!isFinite(value)) return REFRESH_MINUTES_DEFAULT
+  } else {
+    return REFRESH_MINUTES_DEFAULT
+  }
+
+  var minutes = Math.round(value)
+  if (minutes < REFRESH_MINUTES_MIN) return REFRESH_MINUTES_MIN
+  if (minutes > REFRESH_MINUTES_MAX) return REFRESH_MINUTES_MAX
+  return minutes
+}
+
+// The interval as milliseconds, for the scheduler's timer.
+function refreshIntervalMs(value) {
+  return effectiveRefreshMinutes(value) * 60 * 1000
+}

@@ -10,7 +10,7 @@ const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 export function loadQmlJs(relativePath) {
   const source = readFileSync(join(repoRoot, relativePath), 'utf8');
-  const context = vm.createContext({ Math, JSON, Date, isNaN, parseInt, parseFloat, String, Number, Object, Array });
+  const context = vm.createContext({ Math, JSON, Date, isNaN, isFinite, parseInt, parseFloat, String, Number, Object, Array });
   vm.runInContext(source, context, { filename: relativePath });
   return context;
 }
