@@ -532,6 +532,12 @@ var PRECIPITATION_BANDS = [
   { id: "heavy",    minMm: 7.6, maxMm: Infinity, opacity: 0.80 }
 ]
 
+// The precipitation overlay's one colour. Blue and nothing else: intensity is
+// carried by the band opacity, never by hue, so the layer can never be confused
+// with the neutral cloud field beneath it.
+var PRECIPITATION_COLOR = "#4a90d9"
+var PRECIPITATION_RGB = { r: 0x4a, g: 0x90, b: 0xd9 }
+
 // The band for a millimetre amount, by half-open interval [minMm, maxMm).
 // Anything that is not a usable number — including UNAVAILABLE — reads as no
 // precipitation rather than inventing one.
@@ -730,7 +736,7 @@ function clampIndex(value, limit) {
 // Corners with no reading are dropped and the remaining weights renormalised,
 // which is what keeps a cell's unavailable neighbour from bleeding a hole into
 // its own numeric value. A sample with no usable corner at all is unavailable.
-function sampleCloudField(cells, u, v) {
+function sampleField(cells, u, v, key) {
   if (!cells || cells.length < GRID_CELL_COUNT) return UNAVAILABLE
 
   var x = u * GRID_COLUMNS - 0.5
@@ -752,10 +758,10 @@ function sampleCloudField(cells, u, v) {
   if (y0 < 0 || y0 >= GRID_ROWS - 1) ty = (y0 < 0) ? 1 : 0
 
   var corners = [
-    { value: cells[row0 * GRID_COLUMNS + col0].cloudCoverPercent, weight: (1 - tx) * (1 - ty) },
-    { value: cells[row0 * GRID_COLUMNS + col1].cloudCoverPercent, weight: tx * (1 - ty) },
-    { value: cells[row1 * GRID_COLUMNS + col0].cloudCoverPercent, weight: (1 - tx) * ty },
-    { value: cells[row1 * GRID_COLUMNS + col1].cloudCoverPercent, weight: tx * ty }
+    { value: cells[row0 * GRID_COLUMNS + col0][key], weight: (1 - tx) * (1 - ty) },
+    { value: cells[row0 * GRID_COLUMNS + col1][key], weight: tx * (1 - ty) },
+    { value: cells[row1 * GRID_COLUMNS + col0][key], weight: (1 - tx) * ty },
+    { value: cells[row1 * GRID_COLUMNS + col1][key], weight: tx * ty }
   ]
 
   var total = 0
@@ -770,6 +776,16 @@ function sampleCloudField(cells, u, v) {
 
   if (total <= 0) return UNAVAILABLE
   return sum / total
+}
+
+function sampleCloudField(cells, u, v) {
+  return sampleField(cells, u, v, "cloudCoverPercent")
+}
+
+// Precipitation is interpolated as a millimetre amount and only then banded, so
+// band edges follow the shape of the data instead of the sampling lattice.
+function samplePrecipitationField(cells, u, v) {
+  return sampleField(cells, u, v, "precipitationMm")
 }
 
 // Fractional map position of a grid point, for callers that need to sample at

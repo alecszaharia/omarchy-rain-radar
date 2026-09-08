@@ -109,7 +109,8 @@ unavailable.
 
 ### Layer order
 
-Outlines, then the cloud field, then the Chisinau marker. At 100% cover the
+Outlines, then the cloud field, then the precipitation overlay, then the
+Chisinau marker. At 100% cover the
 cloud layer is opaque, so the marker is drawn on top; painted with the basemap
 it would disappear exactly when the map is most worth reading.
 
@@ -125,6 +126,14 @@ falls in exactly one band — no gaps, no overlaps:
 | light | `0.1 <= mm < 2.5` | 0.30 |
 | moderate | `2.5 <= mm < 7.6` | 0.55 |
 | heavy | `mm >= 7.6` | 0.80 |
+
+`Model.PRECIPITATION_COLOR = "#4a90d9"` is the layer's only colour. Intensity is
+carried entirely by the band opacity, never by hue, so the overlay can never be
+confused with the neutral cloud field beneath it.
+
+The millimetre amount is interpolated across the field first and banded
+afterwards, so a band boundary follows the shape of the data rather than the
+sampling lattice.
 
 These are the conventional hourly rain-rate breaks. Rain and snow are not
 distinguished: the source reports a single precipitation amount and the same

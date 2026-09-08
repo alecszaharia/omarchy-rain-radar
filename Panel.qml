@@ -83,15 +83,21 @@ Panel {
           width: parent.width
           height: Math.round(width / Model.MAP_ASPECT)
 
-          // Layer order: outlines, then the cloud field, then the marker on
-          // top — at full cover the cloud layer is opaque, so a marker drawn
-          // with the basemap would vanish exactly when it matters most.
+          // Layer order: outlines, the cloud field, the precipitation overlay
+          // above it, then the marker on top — at full cover the cloud layer is
+          // opaque, so a marker drawn with the basemap would vanish exactly
+          // when it matters most.
           Basemap {
             anchors.fill: parent
             strokeColor: root.foregroundColor
           }
 
           CloudLayer {
+            anchors.fill: parent
+            gridModel: root.gridModel
+          }
+
+          PrecipitationLayer {
             anchors.fill: parent
             gridModel: root.gridModel
           }
