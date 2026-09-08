@@ -88,3 +88,50 @@ function isStatus(value) {
   }
   return false
 }
+
+// ---------------------------------------------------------------------------
+// Projection — cavekit-map-rendering.md R1
+//
+// Equirectangular: longitude and latitude map linearly onto the map area, with
+// no per-latitude stretching, so every grid cell becomes a rectangle of the
+// same size. The map area is expected to be laid out at MAP_ASPECT; at that
+// aspect the horizontal and vertical scales are equal and the projection is
+// distortion-free in both axes.
+// ---------------------------------------------------------------------------
+
+var GRID_LON_SPAN = GRID_BOUNDS.maxLon - GRID_BOUNDS.minLon
+var GRID_LAT_SPAN = GRID_BOUNDS.maxLat - GRID_BOUNDS.minLat
+
+// Width-to-height ratio the map area should be laid out at to preserve the
+// aspect ratio of the bounds (18 degrees of longitude by 12 of latitude).
+var MAP_ASPECT = GRID_LON_SPAN / GRID_LAT_SPAN
+
+// Fraction of the map area's width at the given longitude. minLon maps to 0
+// and maxLon to 1, increasing monotonically in between.
+function projectLonFraction(lon) {
+  return (lon - GRID_BOUNDS.minLon) / GRID_LON_SPAN
+}
+
+// Fraction of the map area's height at the given latitude. maxLat (north) maps
+// to 0 and minLat (south) to 1, so increasing latitude decreases the vertical
+// position as screen coordinates require.
+function projectLatFraction(lat) {
+  return (GRID_BOUNDS.maxLat - lat) / GRID_LAT_SPAN
+}
+
+function projectPoint(lon, lat, width, height) {
+  return {
+    x: projectLonFraction(lon) * width,
+    y: projectLatFraction(lat) * height
+  }
+}
+
+// Units per degree along each axis. Both are independent of position — that is
+// what makes the projection free of differential stretching — so a single pair
+// describes the whole map area.
+function projectionScale(width, height) {
+  return {
+    xPerLon: width / GRID_LON_SPAN,
+    yPerLat: height / GRID_LAT_SPAN
+  }
+}
