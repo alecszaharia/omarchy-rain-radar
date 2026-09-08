@@ -34,6 +34,15 @@ Panel {
   readonly property string dataStatus: weather ? weather.status : Model.STATUS.loading
   readonly property string dataErrorText: weather ? weather.statusState.lastErrorText : ""
   readonly property var statusPresentation: Model.statusPresentation(root.dataStatus)
+  readonly property bool refreshing: weather ? weather.fetching : false
+
+  // The popup's refresh control goes through the service's single-flight guard,
+  // so pressing it during a fetch coalesces onto the request already running
+  // rather than starting another.
+  function requestRefresh() {
+    if (!weather) return false
+    return weather.requestManualRefresh()
+  }
 
   readonly property color foregroundColor: root.barForeground
   readonly property string themeFontFamily: root.bar ? root.bar.fontFamily : ""
@@ -111,6 +120,38 @@ Panel {
           CenterMarker {
             anchors.fill: parent
             markerColor: root.foregroundColor
+          }
+        }
+
+        // ---- Refresh control (R6) ------------------------------------------
+
+        Rectangle {
+          id: refreshControl
+          width: refreshLabel.implicitWidth + Style.space(16)
+          height: refreshLabel.implicitHeight + Style.space(8)
+          radius: Style.space(4)
+          color: refreshArea.containsMouse && !root.refreshing
+            ? Style.hoverFillFor(root.foregroundColor, Color.accent)
+            : "transparent"
+          border.width: 1
+          border.color: root.foregroundColor
+          opacity: root.refreshing ? 0.5 : 1.0
+
+          Text {
+            id: refreshLabel
+            anchors.centerIn: parent
+            text: root.refreshing ? "Refreshing…" : "Refresh"
+            color: root.foregroundColor
+            font.family: root.themeFontFamily
+            font.pixelSize: Style.font.bodySmall
+          }
+
+          MouseArea {
+            id: refreshArea
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: root.requestRefresh()
           }
         }
 
