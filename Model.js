@@ -893,3 +893,37 @@ function isStale(model, now, intervalMs) {
   if (age === null) return false
   return age > staleAfterMs(intervalMs)
 }
+
+// ---------------------------------------------------------------------------
+// Unavailable cells — cavekit-map-rendering.md R3
+//
+// A cell with no reading is not drawn on the cloud ramp at all. It gets a
+// hatch, in the theme's foreground rather than the cloud grey: a pattern no
+// percentage can produce, so "we do not know" can never be mistaken for a
+// density. Documented in docs/rendering.md.
+// ---------------------------------------------------------------------------
+
+var UNAVAILABLE_HATCH_PERIOD = 8
+var UNAVAILABLE_HATCH_WIDTH = 2
+var UNAVAILABLE_HATCH_ALPHA = 0.5
+
+// The cell a point belongs to, by nearest grid point. This is what makes the
+// treatment cell-shaped: the unavailable cell's own area is hatched while its
+// neighbours keep rendering from their own readings.
+function nearestCellIndex(u, v) {
+  var col = clampIndex(Math.floor(u * GRID_COLUMNS), GRID_COLUMNS - 1)
+  var row = clampIndex(Math.floor(v * GRID_ROWS), GRID_ROWS - 1)
+  return row * GRID_COLUMNS + col
+}
+
+function isUnavailableAt(cells, u, v) {
+  if (!cells || cells.length < GRID_CELL_COUNT) return true
+  return cells[nearestCellIndex(u, v)].cloudCoverPercent === UNAVAILABLE
+}
+
+// Diagonal stripes. Alternating between a fixed alpha and nothing is a texture,
+// not a shade, which is why it cannot collide with any value on the ramp.
+function hatchAlphaAt(x, y) {
+  var phase = (x + y) % UNAVAILABLE_HATCH_PERIOD
+  return phase < UNAVAILABLE_HATCH_WIDTH ? UNAVAILABLE_HATCH_ALPHA : 0
+}

@@ -170,3 +170,24 @@ same appearance as an error, so unknown data is never shown as clear weather.
 
 The glyphs are Nerd Font weather icons taken from the set Omarchy's own weather
 widget draws, so they are known to render in the bar's font.
+
+### Cells with no reading
+
+A cell whose cloud cover is `unavailable` is not placed anywhere on the opacity
+ramp. It is hatched instead: diagonal stripes in the bar's **foreground**
+colour, period 8 px, 2 px wide, at alpha 0.5
+(`Model.hatchAlphaAt`, `Model.UNAVAILABLE_HATCH_*`).
+
+That is deliberately distinct in two ways at once from anything a percentage can
+produce:
+
+- **Colour** — the foreground, not the neutral cloud grey, so it reads as chrome
+  rather than as weather.
+- **Texture** — alternating stripes rather than a uniform fill. No cloud
+  percentage renders as a pattern, so "we do not know" can never be misread as
+  a density.
+
+The hatched area is the unavailable cell's own region, decided by nearest grid
+point (`Model.nearestCellIndex`). Its neighbours are unaffected and keep
+rendering from their own readings, because the interpolation drops corners with
+no reading and renormalises the remaining weights.

@@ -98,6 +98,7 @@ Panel {
           CloudLayer {
             anchors.fill: parent
             gridModel: root.gridModel
+            hatchColor: root.foregroundColor
           }
 
           PrecipitationLayer {
