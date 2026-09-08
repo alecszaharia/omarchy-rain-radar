@@ -594,7 +594,7 @@ var CLOUD_RGB = { r: 0x9a, g: 0xa0, b: 0xa6 }
 // range are held back, which is what makes the map read like the sky: a third
 // of the sky covered is thin haze, not a third-grey wash over everything. A
 // straight linear ramp painted broken cloud far heavier than it looks.
-var CLOUD_OPACITY_GAMMA = 2.0
+var CLOUD_OPACITY_GAMMA = 3.0
 
 // Opacity for a cloud cover percentage. 0% is fully transparent, so the
 // basemap underneath is untouched, and 100% is fully opaque — overcast hides

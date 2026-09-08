@@ -80,14 +80,14 @@ this layer ever uses. Cloud cover is expressed purely as opacity:
 | Cloud cover | Opacity |
 | --- | --- |
 | 0% | 0.0 — fully transparent, the basemap beneath is unmodified |
-| 10% | 0.01 |
-| 30% | 0.09 |
-| 50% | 0.25 |
-| 80% | 0.64 |
+| 10% | 0.001 |
+| 30% | 0.03 |
+| 50% | 0.13 |
+| 80% | 0.51 |
 | 100% | 1.0 — fully opaque |
 
 `Model.cloudOpacity(percent)` raises the cover fraction to
-`CLOUD_OPACITY_GAMMA` (2.0). It is the single knob for how heavy the map reads. It is monotonic and clamped at both ends, which is
+`CLOUD_OPACITY_GAMMA` (3.0). It is the single knob for how heavy the map reads. It is monotonic and clamped at both ends, which is
 all R3 fixes; the curve between the ends is a presentation choice.
 
 It is not linear because a linear ramp does not read like the sky. Painting a

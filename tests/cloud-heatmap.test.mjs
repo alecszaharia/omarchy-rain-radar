@@ -51,8 +51,10 @@ test('R3: light and broken cover stay light', () => {
       `${percent}% must render lighter than a linear ramp`);
   }
   // Thin cover is nearly invisible, and overcast is still solid.
-  assert.ok(M.cloudOpacity(10) < 0.05, 'a tenth of the sky must barely register');
-  assert.ok(M.cloudOpacity(90) > 0.8, 'near-overcast must still read as heavy');
+  assert.ok(M.cloudOpacity(10) < 0.01, 'a tenth of the sky must barely register');
+  assert.ok(M.cloudOpacity(50) < 0.2, 'half cover must read as thin, not as a grey wash');
+  assert.ok(M.cloudOpacity(90) > 0.6, 'near-overcast must still read as heavy');
+  assert.equal(M.cloudOpacity(100), 1, 'overcast must still be solid');
 });
 
 test('R3: values outside the range are clamped, not extrapolated', () => {
