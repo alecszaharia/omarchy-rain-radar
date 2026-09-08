@@ -21,11 +21,23 @@ test('R1: the center coordinate is Chisinau', () => {
 });
 
 test('R1: reading the constants cannot trigger a fetch', () => {
-  // The constants live in a file with no network or process surface at all,
-  // which is what makes "readable without triggering a fetch" structural
-  // rather than a matter of call ordering.
+  // Model.js is loaded into a context with no I/O capability whatsoever — no
+  // XMLHttpRequest, no Process, no fetch, no Qt. If reading the constants
+  // needed any of them, loading or reading would throw here.
+  const isolated = loadQmlJs('Model.js');
+  assert.equal(isolated.XMLHttpRequest, undefined);
+  assert.equal(isolated.Process, undefined);
+  assert.equal(isolated.fetch, undefined);
+  assert.equal(isolated.Qt, undefined);
+  assert.equal(plain(isolated.GRID_BOUNDS).minLon, 19.86);
+  assert.equal(isolated.GRID_COLUMNS, 12);
+
+  // Model.js may describe a request but must never perform one: the fetch
+  // command is data the caller runs, not something this file executes.
   const source = readRepoFile('Model.js');
-  for (const forbidden of ['XMLHttpRequest', 'curl', 'Process', 'fetch(', 'Qt.']) {
+  for (const forbidden of ['XMLHttpRequest', 'Qt.', '.exec(', 'spawn(', 'running = true']) {
     assert.ok(!source.includes(forbidden), `Model.js must not reference ${forbidden}`);
   }
+  assert.ok(Array.isArray(plain(isolated.fetchCommand())),
+    'fetchCommand must return argv rather than run anything');
 });
