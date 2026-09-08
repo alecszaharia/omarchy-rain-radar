@@ -223,7 +223,7 @@ Panel {
 
         // Precipitation: one swatch per band at the band's own opacity, each
         // labelled with the millimetre threshold it covers.
-        Row {
+        Flow {
           width: parent.width
           spacing: Style.space(10)
 

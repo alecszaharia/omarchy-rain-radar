@@ -47,8 +47,17 @@ test('R4: the layer uses blue only', () => {
 });
 
 test('R4: intensity is carried by opacity, not by hue', () => {
-  assert.match(layer, /data\[index \+ 3\] = Math\.round\(opacity \* 255\)/);
-  assert.match(layer, /data\[index\] = red/);
+  // Painted, a heavier band is more opaque while the channels stay put.
+  const cells = field(() => 0);
+  const w = 24, h = 18;
+  const light = new Array(w * h * 4).fill(0);
+  const heavy = new Array(w * h * 4).fill(0);
+  M.paintPrecipitationField(field(() => 1.0), w, h, light, plain(M.PRECIPITATION_RGB));
+  M.paintPrecipitationField(field(() => 20.0), w, h, heavy, plain(M.PRECIPITATION_RGB));
+  const mid = (Math.floor(h / 2) * w + Math.floor(w / 2)) * 4;
+  assert.ok(heavy[mid + 3] > light[mid + 3], 'a heavier band must be more opaque');
+  assert.deepEqual(light.slice(mid, mid + 3), heavy.slice(mid, mid + 3), 'the hue must not move');
+  void cells;
 });
 
 test('R4: a value in the none band renders no marking', () => {
@@ -66,7 +75,7 @@ test('R4: an unavailable amount draws nothing', () => {
 test('R4: the amount is interpolated before it is banded', () => {
   // Banding first would step at cell edges; interpolating first makes the band
   // boundary follow the data.
-  assert.match(layer, /Model\.precipitationBand\(Model\.samplePrecipitationField\(cells, u, v\)\)\.opacity/);
+  assert.match(layer, /Model\.paintPrecipitationField\(/);
   const cells = field((col) => (col === 3 ? 0 : (col === 4 ? 8 : 0)));
   const a = plain(M.gridPointFraction(3, 4));
   const b = plain(M.gridPointFraction(4, 4));

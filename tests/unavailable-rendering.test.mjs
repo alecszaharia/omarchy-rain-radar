@@ -49,8 +49,21 @@ test('R3: the treatment is a texture, which no percentage can produce', () => {
 test('R3: the treatment differs in colour from the cloud ramp too', () => {
   // Hatched in the theme foreground, not the neutral cloud grey.
   assert.match(layer, /property color hatchColor/);
-  assert.match(layer, /data\[index\] = hatchRed/);
   assert.match(panel, /hatchColor: root\.foregroundColor/);
+  const w = 120, h = 90;
+  const data = new Array(w * h * 4).fill(0);
+  M.paintCloudField(cells, w, h, data, plain(M.CLOUD_RGB), { r: 7, g: 8, b: 9 });
+  let checked = 0;
+  for (let y = 0; y < h && checked < 40; y++) {
+    for (let x = 0; x < w && checked < 40; x++) {
+      if (!M.isUnavailableAt(cells, (x + 0.5) / w, (y + 0.5) / h)) continue;
+      const i = (y * w + x) * 4;
+      assert.deepEqual([data[i], data[i + 1], data[i + 2]], [7, 8, 9],
+        `the hatch must not use the cloud colour at ${x},${y}`);
+      checked += 1;
+    }
+  }
+  assert.ok(checked > 0, 'the fixture must contain hatched pixels');
 });
 
 test('R3: cells adjacent to the unavailable one render from their own values', () => {
@@ -95,12 +108,20 @@ test('R3: nearest-cell attribution covers the whole map exactly once', () => {
   }
 });
 
-test('R3: the layer checks availability before placing a pixel on the ramp', () => {
-  const unavailableAt = layer.indexOf('Model.isUnavailableAt(cells, u, v)');
-  const rampAt = layer.indexOf('Model.sampleCloudField(cells, u, v)');
-  assert.ok(unavailableAt > 0 && rampAt > unavailableAt,
-    'the unavailable check must come first');
-  assert.match(layer, /Model\.hatchAlphaAt\(x, y\)/);
+test('R3: an unknown cell is never placed on the ramp', () => {
+  // The painter decides availability before it interpolates, so a hatched
+  // pixel can never also carry a cloud opacity.
+  const w = 120, h = 90;
+  const data = new Array(w * h * 4).fill(0);
+  M.paintCloudField(cells, w, h, data, plain(M.CLOUD_RGB), { r: 7, g: 8, b: 9 });
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      if (!M.isUnavailableAt(cells, (x + 0.5) / w, (y + 0.5) / h)) continue;
+      const i = (y * w + x) * 4;
+      assert.equal(data[i + 3], Math.round(M.hatchAlphaAt(x, y) * 255));
+    }
+  }
+  assert.match(layer, /Model\.paintCloudField\(/);
 });
 
 test('R3: the treatment is documented', () => {

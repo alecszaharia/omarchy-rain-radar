@@ -99,19 +99,30 @@ test('R3: a field with no usable reading anywhere is unavailable', () => {
   assert.equal(M.sampleCloudField([], 0.5, 0.5), M.UNAVAILABLE);
 });
 
-test('R3: the layer paints the interpolated field per pixel', () => {
-  assert.match(layer, /Model\.sampleCloudField\(cells, u, v\)/);
+test('R3: the layer paints the interpolated field into the canvas buffer', () => {
+  assert.match(layer, /Model\.paintCloudField\(/);
   assert.match(layer, /ctx\.putImageData\(image, 0, 0\)/);
-  // Pixel centres, not corners.
-  assert.match(layer, /var v = \(y \+ 0\.5\) \/ h/);
-  assert.match(layer, /var u = \(x \+ 0\.5\) \/ w/);
-  // No tiled fill remains.
+  // No tiled fill remains, and the layer does not sample per pixel itself —
+  // that path is too slow to land a paint (see tests/raster.test.mjs).
   assert.ok(!/fillRect/.test(layer), 'the tiled draw must be gone');
+  assert.ok(!/sampleCloudField/.test(layer), 'the layer must not sample per pixel');
 });
 
 test('R3: the field still uses one colour, varying only alpha', () => {
   assert.deepEqual(plain(M.CLOUD_RGB), { r: 0x9a, g: 0xa0, b: 0xa6 });
   assert.equal(`#${[M.CLOUD_RGB.r, M.CLOUD_RGB.g, M.CLOUD_RGB.b].map((c) => c.toString(16)).join('')}`,
     M.CLOUD_COLOR);
-  assert.match(layer, /data\[index \+ 3\] = Math\.round\(alpha \* 255\)/);
+  // Painted across a ramp, only the alpha channel moves.
+  const cells = field((col) => col * 8);
+  const w = 60, h = 27;
+  const data = new Array(w * h * 4).fill(0);
+  M.paintCloudField(cells, w, h, data, plain(M.CLOUD_RGB), { r: 0, g: 0, b: 0 });
+  const alphas = new Set();
+  for (let i = 0; i < w * h; i++) {
+    assert.equal(data[i * 4], M.CLOUD_RGB.r);
+    assert.equal(data[i * 4 + 1], M.CLOUD_RGB.g);
+    assert.equal(data[i * 4 + 2], M.CLOUD_RGB.b);
+    alphas.add(data[i * 4 + 3]);
+  }
+  assert.ok(alphas.size > 10, 'the ramp must produce many distinct opacities');
 });

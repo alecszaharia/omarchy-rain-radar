@@ -1061,3 +1061,169 @@ function resolveStatus(model, now, intervalMs, lastAttemptFailed) {
   if (!model) return STATUS.loading
   return isStale(model, now, intervalMs) ? STATUS.stale : STATUS.ready
 }
+
+// ---------------------------------------------------------------------------
+// Raster painting — cavekit-map-rendering.md R3, R4
+//
+// sampleCloudField is the readable definition of the field, but calling it per
+// pixel allocates a corner array per pixel and is far too slow to paint with:
+// a 480x320 canvas costs ~270 ms in V8 and several times that in QML's engine,
+// so the paint never lands and the layer renders blank.
+//
+// These two functions do the same interpolation with the per-column and
+// per-row terms hoisted out of the inner loop and no allocation inside it, and
+// write RGBA straight into the canvas buffer. The field they produce is the
+// one sampleCloudField defines — a test asserts they agree pixel for pixel.
+// ---------------------------------------------------------------------------
+
+// Per-axis interpolation terms for one raster axis: for each output pixel, the
+// two sample indices that bracket it and the weight between them.
+function axisTerms(length, samples) {
+  var index0 = new Array(length)
+  var index1 = new Array(length)
+  var weight = new Array(length)
+  var nearest = new Array(length)
+
+  for (var i = 0; i < length; i++) {
+    var position = ((i + 0.5) / length) * samples - 0.5
+    var floor = Math.floor(position)
+    var t = position - floor
+
+    // Outside the sample lattice the edge value holds flat, matching
+    // sampleCloudField's clamping.
+    if (floor < 0) { floor = 0; t = 0 }
+    else if (floor >= samples - 1) { floor = samples - 1; t = 0 }
+
+    index0[i] = floor
+    index1[i] = floor + 1 <= samples - 1 ? floor + 1 : samples - 1
+    weight[i] = t
+    nearest[i] = clampIndex(Math.floor(((i + 0.5) / length) * samples), samples - 1)
+  }
+  return { index0: index0, index1: index1, weight: weight, nearest: nearest }
+}
+
+// Writes the cloud layer into `data` (RGBA bytes, length w*h*4).
+function paintCloudField(cells, w, h, data, cloud, hatch) {
+  if (!cells || cells.length < GRID_CELL_COUNT) return
+  if (w <= 0 || h <= 0) return
+
+  var cols = axisTerms(w, GRID_COLUMNS)
+  var rows = axisTerms(h, GRID_ROWS)
+
+  // Hoisted so the inner loop touches only numbers and array slots.
+  var values = new Array(GRID_CELL_COUNT)
+  for (var c = 0; c < GRID_CELL_COUNT; c++) {
+    var value = cells[c].cloudCoverPercent
+    values[c] = (typeof value === "number") ? value : -1
+  }
+
+  for (var y = 0; y < h; y++) {
+    var row0 = rows.index0[y] * GRID_COLUMNS
+    var row1 = rows.index1[y] * GRID_COLUMNS
+    var ty = rows.weight[y]
+    var nearestRow = rows.nearest[y] * GRID_COLUMNS
+    var lineOffset = y * w * 4
+
+    for (var x = 0; x < w; x++) {
+      var index = lineOffset + x * 4
+
+      // A cell with no reading is hatched rather than placed on the ramp.
+      if (values[nearestRow + cols.nearest[x]] < 0) {
+        data[index] = hatch.r
+        data[index + 1] = hatch.g
+        data[index + 2] = hatch.b
+        data[index + 3] = Math.round(hatchAlphaAt(x, y) * 255)
+        continue
+      }
+
+      var col0 = cols.index0[x]
+      var col1 = cols.index1[x]
+      var tx = cols.weight[x]
+
+      var v00 = values[row0 + col0]
+      var v10 = values[row0 + col1]
+      var v01 = values[row1 + col0]
+      var v11 = values[row1 + col1]
+
+      var w00 = (1 - tx) * (1 - ty)
+      var w10 = tx * (1 - ty)
+      var w01 = (1 - tx) * ty
+      var w11 = tx * ty
+
+      var sum = 0
+      var total = 0
+      if (v00 >= 0 && w00 > 0) { sum += v00 * w00; total += w00 }
+      if (v10 >= 0 && w10 > 0) { sum += v10 * w10; total += w10 }
+      if (v01 >= 0 && w01 > 0) { sum += v01 * w01; total += w01 }
+      if (v11 >= 0 && w11 > 0) { sum += v11 * w11; total += w11 }
+
+      data[index] = cloud.r
+      data[index + 1] = cloud.g
+      data[index + 2] = cloud.b
+      data[index + 3] = total > 0 ? Math.round(cloudOpacity(sum / total) * 255) : 0
+    }
+  }
+}
+
+// Writes the precipitation layer into `data`. Same interpolation, then banded.
+function paintPrecipitationField(cells, w, h, data, colour) {
+  if (!cells || cells.length < GRID_CELL_COUNT) return
+  if (w <= 0 || h <= 0) return
+
+  var cols = axisTerms(w, GRID_COLUMNS)
+  var rows = axisTerms(h, GRID_ROWS)
+
+  var values = new Array(GRID_CELL_COUNT)
+  for (var c = 0; c < GRID_CELL_COUNT; c++) {
+    var value = cells[c].precipitationMm
+    values[c] = (typeof value === "number") ? value : -1
+  }
+
+  // Band opacities as a flat lookup, so the inner loop never walks the table.
+  for (var y = 0; y < h; y++) {
+    var row0 = rows.index0[y] * GRID_COLUMNS
+    var row1 = rows.index1[y] * GRID_COLUMNS
+    var ty = rows.weight[y]
+    var nearestRow = rows.nearest[y] * GRID_COLUMNS
+    var lineOffset = y * w * 4
+
+    for (var x = 0; x < w; x++) {
+      var index = lineOffset + x * 4
+      data[index] = colour.r
+      data[index + 1] = colour.g
+      data[index + 2] = colour.b
+
+      // A cell with no amount of its own draws nothing; a neighbour's amount
+      // must not be interpolated into it.
+      if (values[nearestRow + cols.nearest[x]] < 0) {
+        data[index + 3] = 0
+        continue
+      }
+
+      var col0 = cols.index0[x]
+      var col1 = cols.index1[x]
+      var tx = cols.weight[x]
+
+      var v00 = values[row0 + col0]
+      var v10 = values[row0 + col1]
+      var v01 = values[row1 + col0]
+      var v11 = values[row1 + col1]
+
+      var w00 = (1 - tx) * (1 - ty)
+      var w10 = tx * (1 - ty)
+      var w01 = (1 - tx) * ty
+      var w11 = tx * ty
+
+      var sum = 0
+      var total = 0
+      if (v00 >= 0 && w00 > 0) { sum += v00 * w00; total += w00 }
+      if (v10 >= 0 && w10 > 0) { sum += v10 * w10; total += w10 }
+      if (v01 >= 0 && w01 > 0) { sum += v01 * w01; total += w01 }
+      if (v11 >= 0 && w11 > 0) { sum += v11 * w11; total += w11 }
+
+      data[index + 3] = total > 0
+        ? Math.round(precipitationBand(sum / total).opacity * 255)
+        : 0
+    }
+  }
+}

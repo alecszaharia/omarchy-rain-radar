@@ -10,7 +10,7 @@ and a refresh button.
 ## Install
 
 ```sh
-omarchy plugin add https://github.com/alecszaharia/cloud-radar
+omarchy plugin add https://github.com/alecszaharia/omarchy-rain-radar
 ```
 
 Then enable it from Omarchy's plugin list. The widget lands in the bar's

@@ -11,10 +11,13 @@ const readme = readmeRaw.replace(/\s+/g, ' ');
 const manifest = readRepoJson('manifest.json');
 const schema = manifest.barWidget.schema[0];
 
+const REPO_URL = 'https://github.com/alecszaharia/omarchy-rain-radar';
+
 test('R5: the README documents installation with the standard command', () => {
   assert.match(readme, /omarchy plugin add /);
-  assert.ok(readme.includes(manifest.id.split('.').pop()),
-    'the install command must name the repository');
+  // The repository the plugin is actually published from, which is not the
+  // same string as the plugin id.
+  assert.ok(readme.includes(REPO_URL), `the install command must name ${REPO_URL}`);
 });
 
 test('R5: the README documents placing it next to the weather widget', () => {
