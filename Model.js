@@ -839,11 +839,15 @@ function clampIndex(value, limit) {
 //
 // Plain bilinear across a 1.5-degree lattice reads as a wash: every feature is
 // spread evenly over the 110 km between samples. Easing the fractional weights
-// concentrates the change in the middle of each span, so a bank of cloud keeps
-// a recognisable edge while the field stays perfectly continuous — at the
+// concentrates the change into the middle of each span, so a bank of cloud
+// keeps a recognisable edge while the field stays perfectly continuous — at the
 // midpoint the eased weight is still exactly 0.5, so no boundary appears.
+//
+// This is the fifth-order ease rather than the third: it sits flatter near each
+// reading and turns harder between them, which tightens the edges further
+// without ever introducing one.
 function easeWeight(t) {
-  return t * t * (3 - 2 * t)
+  return t * t * t * (t * (6 * t - 15) + 10)
 }
 
 function sampleField(cells, u, v, key) {

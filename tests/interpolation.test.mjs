@@ -124,3 +124,22 @@ test('R3: the field still uses one colour, varying only alpha', () => {
   assert.ok(alphas.size > 10, 'the ramp must produce many distinct opacities');
   assert.match(readRepoFile('CloudLayer.qml'), /ctx\.fillStyle = Model\.CLOUD_COLOR/);
 });
+
+test('R3: the easing tightens edges without creating one', () => {
+  // Flatter near each reading and steeper between them than a linear blend,
+  // so a cloud bank keeps its edge — but still exactly halfway at the midpoint,
+  // which is what stops a boundary appearing there.
+  assert.equal(M.easeWeight(0), 0);
+  assert.equal(M.easeWeight(1), 1);
+  assert.equal(M.easeWeight(0.5), 0.5);
+  assert.ok(M.easeWeight(0.25) < 0.25, 'must sit flat near a reading');
+  assert.ok(M.easeWeight(0.75) > 0.75, 'and flat approaching the next one');
+
+  // Monotonic, so the field never reverses along a ramp.
+  let previous = -1;
+  for (let t = 0; t <= 1; t += 0.01) {
+    const eased = M.easeWeight(t);
+    assert.ok(eased >= previous, `easing must not decrease at ${t}`);
+    previous = eased;
+  }
+});

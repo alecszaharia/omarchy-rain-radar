@@ -122,11 +122,13 @@ renormalised, so an unavailable cell cannot bleed a hole into a neighbour that
 does have a reading. A sample with no usable corner at all is itself
 unavailable.
 
-The fractional weights are eased (`Model.easeWeight`, a smoothstep) before the
-blend. Plain bilinear across a 1.5° lattice reads as a wash, because every
+The fractional weights are eased (`Model.easeWeight`, a fifth-order smootherstep)
+before the blend. Plain bilinear across a 1.5° lattice reads as a wash, because every
 feature is spread evenly over the ~110 km between samples; easing concentrates
-the change in the middle of each span so a bank of cloud keeps a recognisable
-edge. The field stays continuous and monotonic, and at the midpoint between two
+the change into the middle of each span so a bank of cloud keeps a recognisable
+edge. The fifth-order curve sits flatter near each reading and turns harder
+between them than the third-order one it replaced, which tightens the edges
+further. The field stays continuous and monotonic, and at the midpoint between two
 readings the eased weight is still exactly 0.5 — so no cell boundary appears and
 R3's midpoint rule still holds.
 
