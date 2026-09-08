@@ -849,3 +849,25 @@ function loadTimeDecision(model, now, intervalMs) {
   // refresh now.
   return { fetchNow: true, nextFetchDelayMs: intervalMs }
 }
+
+// ---------------------------------------------------------------------------
+// Retry policy — cavekit-weather-data.md R4
+//
+// A failed refresh is retried a fixed number of times and then gives up until
+// the next scheduled interval. Both numbers are constants, not user settings:
+// the point is a bounded amount of noise after a failure, not a knob.
+// Documented in docs/data.md.
+// ---------------------------------------------------------------------------
+
+// Retries after the initial attempt, so a failing cycle makes at most
+// 1 + FETCH_RETRY_LIMIT attempts before waiting for the next interval.
+var FETCH_RETRY_LIMIT = 2
+var FETCH_RETRY_DELAY_MS = 30 * 1000
+
+// Given how many attempts in this cycle have already failed, whether to try
+// again and how long to wait first.
+function retryDecision(failedAttempts) {
+  var failed = (typeof failedAttempts === "number" && isFinite(failedAttempts)) ? failedAttempts : 0
+  if (failed >= 1 + FETCH_RETRY_LIMIT) return { retry: false, delayMs: 0 }
+  return { retry: true, delayMs: FETCH_RETRY_DELAY_MS }
+}

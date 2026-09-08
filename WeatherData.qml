@@ -44,8 +44,28 @@ QtObject {
     return root.refresh()
   }
 
+  // Failed attempts in the current refresh cycle. Reset whenever a cycle ends,
+  // so a bad patch of network does not shorten the next cycle's allowance.
+  property int failedAttempts: 0
+
   function applyFailure(text) {
     statusState.apply(Model.statusOnFailure(statusState.snapshot(), text, new Date()))
+
+    root.failedAttempts += 1
+    var decision = Model.retryDecision(root.failedAttempts)
+    if (decision.retry) {
+      retryTimer.interval = decision.delayMs
+      retryTimer.running = true
+    } else {
+      // Out of retries: stay quiet until the next scheduled interval.
+      root.failedAttempts = 0
+    }
+  }
+
+  property Timer retryTimer: Timer {
+    repeat: false
+    running: false
+    onTriggered: root.refresh()
   }
 
   function applyResponse(rawText, completedAt) {
@@ -54,6 +74,10 @@ QtObject {
     root.gridModel = Model.nextPublishedModel(root.gridModel, parsed)
     if (parsed.model) {
       statusState.apply(Model.statusOnSuccess(statusState.snapshot(), completedAt))
+      // A success ends the cycle, so the next failure starts from a full
+      // retry allowance.
+      root.failedAttempts = 0
+      retryTimer.running = false
       // Persist after publishing, never before: the screen must not wait on
       // the disk, and a write failure must not hold back a good model.
       root.writeCache(parsed.model)
