@@ -78,6 +78,7 @@ QtObject {
       // retry allowance.
       root.failedAttempts = 0
       retryTimer.running = false
+      root.evaluateStaleness()
       // Persist after publishing, never before: the screen must not wait on
       // the disk, and a write failure must not hold back a good model.
       root.writeCache(parsed.model)
@@ -165,6 +166,8 @@ QtObject {
     // from when it was actually fetched rather than from now.
     statusState.apply(Model.statusOnSuccess(statusState.snapshot(),
                                             Model.parseDataTime(restored.fetchedAt)))
+    // A restored model may already be old enough to be stale.
+    root.evaluateStaleness()
     return true
   }
 
@@ -194,6 +197,32 @@ QtObject {
     repeat: false
     running: false
     onTriggered: root.refresh()
+  }
+
+  // ---- Staleness (R5, R6) ------------------------------------------------
+  // Age is not an event, so this is re-evaluated on a tick as well as after
+  // every fetch and restore.
+
+  readonly property int staleAfterMs: Model.staleAfterMs(root.refreshIntervalMs)
+
+  function evaluateStaleness() {
+    if (!root.gridModel) return
+    // A fetch in progress owns the status, and a failed attempt keeps it:
+    // error takes precedence over stale (formalised in T-046).
+    if (statusState.status === Model.STATUS.loading) return
+    if (statusState.status === Model.STATUS.error) return
+
+    var next = Model.isStale(root.gridModel, new Date(), root.refreshIntervalMs)
+      ? Model.STATUS.stale
+      : Model.STATUS.ready
+    if (statusState.status !== next) statusState.set(next)
+  }
+
+  property Timer stalenessTimer: Timer {
+    interval: 30000
+    repeat: true
+    running: true
+    onTriggered: root.evaluateStaleness()
   }
 
   // ---- Scheduling (R4) ---------------------------------------------------

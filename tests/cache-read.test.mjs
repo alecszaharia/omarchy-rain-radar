@@ -67,8 +67,11 @@ test('R5: a cache whose model does not match the grid is ignored', () => {
 
 test('R5: the cache read alone never produces an error status', () => {
   // Nothing has been fetched yet, so there is no fetch to have failed.
+  // Scoped to the two cache functions themselves: a later guard elsewhere may
+  // read the error status, but nothing on this path may set it.
   const restore = service.slice(service.indexOf('function noteCacheUnreadable'),
-                                service.indexOf('property Timer refreshTimer'));
-  assert.ok(!/STATUS\.error/.test(restore), 'the cache path must not set the error status');
+                                service.indexOf('// ---- Staleness'));
+  assert.ok(!/set\(Model\.STATUS\.error\)/.test(restore), 'the cache path must not set the error status');
+  assert.ok(!/statusOnFailure/.test(restore), 'the cache path must not report a failure');
   assert.match(service, /function noteCacheUnreadable\(\)[\s\S]*?root\.cacheChecked = true/);
 });

@@ -871,3 +871,25 @@ function retryDecision(failedAttempts) {
   if (failed >= 1 + FETCH_RETRY_LIMIT) return { retry: false, delayMs: 0 }
   return { retry: true, delayMs: FETCH_RETRY_DELAY_MS }
 }
+
+// ---------------------------------------------------------------------------
+// Staleness — cavekit-weather-data.md R5, R6
+//
+// A model goes stale by the passage of time rather than by any event, so it has
+// to be re-evaluated on a tick as well as after a fetch.
+// ---------------------------------------------------------------------------
+
+// A model is stale once it is older than this many refresh intervals.
+var STALE_INTERVAL_MULTIPLIER = 2
+
+function staleAfterMs(intervalMs) {
+  return intervalMs * STALE_INTERVAL_MULTIPLIER
+}
+
+// An undatable model is not called stale: nothing is known about its age, and
+// claiming staleness would be as much of an invention as claiming freshness.
+function isStale(model, now, intervalMs) {
+  var age = modelAgeMs(model, now)
+  if (age === null) return false
+  return age > staleAfterMs(intervalMs)
+}

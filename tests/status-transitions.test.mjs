@@ -83,12 +83,18 @@ test('R6: a failure always carries an error text', () => {
   }
 });
 
-test('R6: every transition goes through the reducer, not ad-hoc writes', () => {
+test('R6: every fetch-driven transition goes through the reducer', () => {
   // Direct field writes would let the snapshot and the status drift apart.
-  const body = service.slice(service.indexOf('function refresh'));
+  // Scoped to the fetch paths: the time-driven stale/ready flip changes no
+  // timestamps and no error text, so it sets the status on its own.
+  const body = service.slice(service.indexOf('function refresh'),
+                             service.indexOf('// ---- Staleness'));
   assert.ok(!/statusState\.lastErrorText\s*=/.test(body), 'error text must come from the reducer');
   assert.ok(!/statusState\.lastSuccessAt\s*=/.test(body), 'success time must come from the reducer');
   assert.ok(!/statusState\.set\(/.test(body), 'the status must come from the reducer');
+  for (const call of ['statusOnAttemptStart', 'statusOnSuccess', 'statusOnFailure']) {
+    assert.ok(body.includes(call), `${call} must drive its transition`);
+  }
 });
 
 test('R6: applying a snapshot notifies consumers last, with fields already set', () => {
