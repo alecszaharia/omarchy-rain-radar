@@ -22,3 +22,10 @@ export function readRepoFile(relativePath) {
 export function readRepoJson(relativePath) {
   return JSON.parse(readRepoFile(relativePath));
 }
+
+// Values built inside the vm realm carry that realm's prototypes, so node's
+// strict deep-equality rejects them against host-realm literals even when the
+// data is identical. Round-tripping brings plain data back into this realm.
+export function plain(value) {
+  return JSON.parse(JSON.stringify(value));
+}
