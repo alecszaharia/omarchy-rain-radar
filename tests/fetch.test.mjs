@@ -46,7 +46,7 @@ test('R2: a timeout produces the error status rather than a hang', () => {
   assert.ok(M.fetchFailureText(7).length > 0, 'every failure must explain itself');
   // The process exit path is what turns that into the status.
   assert.match(service, /onExited: function\(exitCode, exitStatus\) \{\s*if \(exitCode !== 0\) root\.applyFailure/);
-  assert.match(service, /function applyFailure\(text\)[\s\S]*statusState\.set\(Model\.STATUS\.error\)/);
+  assert.match(service, /function applyFailure\(text\)[\s\S]*Model\.statusOnFailure\(/);
 });
 
 test('R2: two callers cannot put two requests on the wire', () => {
@@ -54,11 +54,14 @@ test('R2: two callers cannot put two requests on the wire', () => {
 });
 
 test('R2: a refresh starts from the loading status', () => {
-  assert.match(service, /statusState\.set\(Model\.STATUS\.loading\)/);
-  assert.match(service, /statusState\.lastAttemptAt = new Date\(\)/);
+  // The reducer owns the transition; starting an attempt yields loading and
+  // advances the attempt time together.
+  assert.match(service, /Model\.statusOnAttemptStart\(statusState\.snapshot\(\), new Date\(\)\)/);
+  assert.equal(M.statusOnAttemptStart(M.initialStatusSnapshot(), new Date()).status, 'loading');
 });
 
 test('R2: a successful response publishes and a failed one preserves', () => {
   assert.match(service, /root\.gridModel = Model\.nextPublishedModel\(root\.gridModel, parsed\)/);
-  assert.match(service, /statusState\.set\(Model\.STATUS\.ready\)/);
+  assert.match(service, /Model\.statusOnSuccess\(statusState\.snapshot\(\), completedAt\)/);
+  assert.equal(M.statusOnSuccess(M.initialStatusSnapshot(), new Date()).status, 'ready');
 });

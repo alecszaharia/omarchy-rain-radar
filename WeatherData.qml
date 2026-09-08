@@ -28,16 +28,14 @@ QtObject {
   // refresh path on top of this guard.
   function refresh() {
     if (fetchProcess.running) return false
-    statusState.lastAttemptAt = new Date()
-    statusState.set(Model.STATUS.loading)
+    statusState.apply(Model.statusOnAttemptStart(statusState.snapshot(), new Date()))
     fetchProcess.command = Model.fetchCommand()
     fetchProcess.running = true
     return true
   }
 
   function applyFailure(text) {
-    statusState.lastErrorText = text
-    statusState.set(Model.STATUS.error)
+    statusState.apply(Model.statusOnFailure(statusState.snapshot(), text, new Date()))
   }
 
   function applyResponse(rawText, completedAt) {
@@ -45,9 +43,7 @@ QtObject {
     // The previously published model survives a failed parse.
     root.gridModel = Model.nextPublishedModel(root.gridModel, parsed)
     if (parsed.model) {
-      statusState.lastErrorText = ""
-      statusState.lastSuccessAt = completedAt
-      statusState.set(Model.STATUS.ready)
+      statusState.apply(Model.statusOnSuccess(statusState.snapshot(), completedAt))
       // Persist after publishing, never before: the screen must not wait on
       // the disk, and a write failure must not hold back a good model.
       root.writeCache(parsed.model)
@@ -131,9 +127,10 @@ QtObject {
     if (root.gridModel) return false
 
     root.gridModel = restored
-    statusState.lastSuccessAt = Model.parseDataTime(restored.fetchedAt)
-    // Staleness is applied in T-039; a restored model starts as ready.
-    statusState.set(Model.STATUS.ready)
+    // Staleness is applied in T-039; a restored model starts as ready, dated
+    // from when it was actually fetched rather than from now.
+    statusState.apply(Model.statusOnSuccess(statusState.snapshot(),
+                                            Model.parseDataTime(restored.fetchedAt)))
     return true
   }
 

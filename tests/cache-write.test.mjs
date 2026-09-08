@@ -33,7 +33,7 @@ test('R5: the cache lives under the user state directory', () => {
 
 test('R5: the model is published before it is persisted', () => {
   // The screen must not wait on the disk.
-  const publishAt = service.indexOf('statusState.set(Model.STATUS.ready)');
+  const publishAt = service.indexOf('Model.statusOnSuccess(statusState.snapshot(), completedAt)');
   const writeAt = service.indexOf('root.writeCache(parsed.model)');
   assert.ok(publishAt > 0 && writeAt > publishAt, 'the cache write must follow publication');
 });

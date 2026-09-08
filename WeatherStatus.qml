@@ -31,4 +31,24 @@ QtObject {
     root.status = next
     return true
   }
+
+  // The current snapshot, in the shape Model's status reducer works on.
+  function snapshot() {
+    return {
+      status: root.status,
+      lastSuccessAt: root.lastSuccessAt,
+      lastAttemptAt: root.lastAttemptAt,
+      lastErrorText: root.lastErrorText
+    }
+  }
+
+  // Adopt a snapshot the reducer produced. The status goes last so a consumer
+  // woken by statusChanged already sees the fields that go with it.
+  function apply(next) {
+    if (!next) return false
+    root.lastSuccessAt = next.lastSuccessAt
+    root.lastAttemptAt = next.lastAttemptAt
+    root.lastErrorText = next.lastErrorText
+    return root.set(next.status)
+  }
 }

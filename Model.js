@@ -647,3 +647,57 @@ function deserializeCache(rawText) {
 
   return model
 }
+
+// ---------------------------------------------------------------------------
+// Status transitions — cavekit-weather-data.md R6
+//
+// A pure reducer over the status snapshot, so every transition a fetch drives
+// can be observed from fixtures rather than inferred from QML signals. The
+// store in WeatherStatus.qml holds the result; this decides it.
+//
+// Snapshot shape: { status, lastSuccessAt, lastAttemptAt, lastErrorText }.
+// ---------------------------------------------------------------------------
+
+function initialStatusSnapshot() {
+  return {
+    status: STATUS.loading,
+    lastSuccessAt: null,
+    lastAttemptAt: null,
+    lastErrorText: ""
+  }
+}
+
+// A fetch is starting. The attempt time advances whatever the outcome turns out
+// to be, and the last known success is kept so a failure can still report it.
+function statusOnAttemptStart(snapshot, now) {
+  return {
+    status: STATUS.loading,
+    lastSuccessAt: snapshot ? snapshot.lastSuccessAt : null,
+    lastAttemptAt: now,
+    lastErrorText: snapshot ? snapshot.lastErrorText : ""
+  }
+}
+
+// The fetch produced a usable model. The error text is cleared: it described a
+// failure that has now been superseded.
+function statusOnSuccess(snapshot, now) {
+  return {
+    status: STATUS.ready,
+    lastSuccessAt: now,
+    lastAttemptAt: snapshot ? snapshot.lastAttemptAt : now,
+    lastErrorText: ""
+  }
+}
+
+// The fetch failed, or produced nothing usable. lastSuccessAt is preserved so
+// the popup can still say how old the model on screen is.
+function statusOnFailure(snapshot, errorText, now) {
+  var text = String(errorText === null || errorText === undefined ? "" : errorText)
+  return {
+    status: STATUS.error,
+    lastSuccessAt: snapshot ? snapshot.lastSuccessAt : null,
+    lastAttemptAt: snapshot ? snapshot.lastAttemptAt : now,
+    // The error status always carries something a reader can act on.
+    lastErrorText: text === "" ? "Refresh failed" : text
+  }
+}
