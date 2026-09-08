@@ -34,3 +34,30 @@ var GRID_CENTER = {
   lat: 47.01,
   lon: 28.86
 }
+
+// ---------------------------------------------------------------------------
+// Observable status — cavekit-weather-data.md R6
+//
+// Exactly one of these four values is current at any instant. The enum and its
+// validator live here so both the store (WeatherStatus.qml) and every consumer
+// agree on the vocabulary; the observability itself is QML's property change
+// notification, which WeatherStatus.qml gets from declaring `status` a property.
+// ---------------------------------------------------------------------------
+
+var STATUS = {
+  loading: "loading",
+  ready: "ready",
+  stale: "stale",
+  error: "error"
+}
+
+// Declared explicitly rather than derived from STATUS with Object.keys so the
+// set is a stated contract: adding a value here is a deliberate act.
+var STATUS_VALUES = ["loading", "ready", "stale", "error"]
+
+function isStatus(value) {
+  for (var i = 0; i < STATUS_VALUES.length; i++) {
+    if (STATUS_VALUES[i] === value) return true
+  }
+  return false
+}
