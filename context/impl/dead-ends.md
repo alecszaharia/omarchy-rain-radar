@@ -78,3 +78,36 @@ to render when the log showed its paint had in fact completed.
 **Rule:** when a visual conclusion contradicts instrumented logging, trust the
 log and re-establish the capture before drawing any conclusion. Confirm what is
 on screen with the user rather than with a screenshot that may be stale.
+
+## Hot-reload updates .js imports but not .qml component types — CONFIRMED
+
+Omarchy's plugin watcher logs `Local plugin changed, reloading` for any file in
+the plugin directory, but the two kinds of file behave differently in the
+running shell:
+
+- **`Model.js` and other `.js` imports are re-evaluated.** An edit takes effect
+  on the next paint.
+- **`.qml` component types are not rebuilt.** The engine keeps the compiled type
+  it already has, so an edit to `CloudLayer.qml`, `Panel.qml` or any other
+  component has no effect until the shell process restarts.
+
+Demonstrated unambiguously: with both fixes written to the installed plugin at
+the same moment, the interpolation sharpening (`Model.js`) appeared immediately
+while the seam fix (`CloudLayer.qml`) did not, and the file on disk was verified
+to contain it.
+
+This wasted a great deal of time and produced several wrong diagnoses. Symptoms
+were read as rendering bugs — `putImageData` not working, a component failing to
+instantiate, a root-type change defeating the loader — when the truth was simply
+that the QML being executed was hours old.
+
+**Rules:**
+- After editing any `.qml` file, restart the shell before judging the result.
+- `omarchy-restart-shell` restarts without touching configuration.
+- **Never** use `omarchy-refresh-shell` for this. Its own summary line reads
+  "Reset shell.json to Omarchy defaults": it wipes the bar layout, removing
+  third-party widgets, and then restarts. It was run once in this session and
+  cost the user their bar arrangement, which had to be rebuilt with
+  `omarchy-shell shell putBarWidget`.
+- A conclusion drawn from a `.qml` edit without an intervening restart is not
+  evidence.
