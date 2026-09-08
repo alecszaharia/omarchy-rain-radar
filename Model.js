@@ -462,3 +462,22 @@ function fetchFailureText(exitCode) {
   if (exitCode === 28) return "Open-Meteo timed out after " + FETCH_TIMEOUT_SECONDS + "s"
   return "Could not reach Open-Meteo (curl exit " + exitCode + ")"
 }
+
+// ---------------------------------------------------------------------------
+// Cache — cavekit-weather-data.md R5
+//
+// The last successful grid model is persisted so a map is on screen before any
+// network result. The payload is versioned: a future change to the model shape
+// can then reject an old file instead of misreading it.
+// ---------------------------------------------------------------------------
+
+var CACHE_VERSION = 1
+
+// Relative to the user's state directory; the QML side resolves the root from
+// XDG_STATE_HOME, falling back to ~/.local/state, the way Omarchy's own plugins
+// do.
+var CACHE_RELATIVE_PATH = "omarchy/cloud-radar/model.json"
+
+function serializeCache(model) {
+  return JSON.stringify({ version: CACHE_VERSION, model: model }) + "\n"
+}

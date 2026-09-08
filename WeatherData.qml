@@ -1,4 +1,5 @@
 import QtQuick
+import Quickshell
 import Quickshell.Io
 import "Model.js" as Model
 
@@ -47,6 +48,9 @@ QtObject {
       statusState.lastErrorText = ""
       statusState.lastSuccessAt = completedAt
       statusState.set(Model.STATUS.ready)
+      // Persist after publishing, never before: the screen must not wait on
+      // the disk, and a write failure must not hold back a good model.
+      root.writeCache(parsed.model)
     } else {
       root.applyFailure(parsed.errorText)
     }
@@ -65,6 +69,40 @@ QtObject {
     // stalled request from parking the widget in `loading`.
     onExited: function(exitCode, exitStatus) {
       if (exitCode !== 0) root.applyFailure(Model.fetchFailureText(exitCode))
+    }
+  }
+
+  // ---- Cache (R5) --------------------------------------------------------
+  // Written after every success so a restart shows a map immediately. A write
+  // failure is logged and dropped: the model on screen and the next scheduled
+  // refresh must not depend on the disk being writable.
+
+  readonly property string stateRoot:
+    (Quickshell.env("XDG_STATE_HOME") || (Quickshell.env("HOME") + "/.local/state"))
+  readonly property string cachePath: stateRoot + "/" + Model.CACHE_RELATIVE_PATH
+
+  function writeCache(model) {
+    if (!model) return false
+    try {
+      cacheFile.setText(Model.serializeCache(model))
+      return true
+    } catch (e) {
+      console.warn("cloud-radar: could not write the cache at", root.cachePath, e)
+      return false
+    }
+  }
+
+  property FileView cacheFile: FileView {
+    path: root.cachePath
+    watchChanges: false
+    // The state file is rewritten whole on every success, so a torn write
+    // would leave an unreadable cache behind.
+    atomicWrites: true
+    printErrors: false
+
+    onSaveFailed: function(error) {
+      // Non-fatal by design: log it and carry on with the model in memory.
+      console.warn("cloud-radar: cache write failed at", root.cachePath, error)
     }
   }
 }
