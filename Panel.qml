@@ -256,10 +256,21 @@ Panel {
             height: Style.space(10)
             anchors.verticalCenter: parent.verticalCenter
             radius: Style.space(2)
+            // Stops taken from the same curve the map uses, so the key cannot
+            // disagree with what is drawn.
             gradient: Gradient {
               orientation: Gradient.Horizontal
+
               GradientStop { position: 0.0; color: "transparent" }
-              GradientStop { position: 1.0; color: Model.CLOUD_COLOR }
+
+              Repeater {
+                model: Model.cloudLegendStops(6).slice(1)
+                GradientStop {
+                  position: modelData.position
+                  color: Qt.rgba(Model.CLOUD_RGB.r / 255, Model.CLOUD_RGB.g / 255,
+                                 Model.CLOUD_RGB.b / 255, modelData.opacity)
+                }
+              }
             }
           }
 

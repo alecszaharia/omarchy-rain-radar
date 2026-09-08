@@ -594,7 +594,7 @@ var CLOUD_RGB = { r: 0x9a, g: 0xa0, b: 0xa6 }
 // range are held back, which is what makes the map read like the sky: a third
 // of the sky covered is thin haze, not a third-grey wash over everything. A
 // straight linear ramp painted broken cloud far heavier than it looks.
-var CLOUD_OPACITY_GAMMA = 1.6
+var CLOUD_OPACITY_GAMMA = 2.0
 
 // Opacity for a cloud cover percentage. 0% is fully transparent, so the
 // basemap underneath is untouched, and 100% is fully opaque — overcast hides
@@ -896,6 +896,18 @@ function samplePrecipitationField(cells, u, v) {
 
 
 // Human-readable threshold for a precipitation band, used by the popup legend.
+// Opacity stops for the cloud legend, so the key shows the same curve the map
+// draws rather than a straight ramp that would disagree with it.
+function cloudLegendStops(count) {
+  var steps = (typeof count === "number" && count >= 2) ? Math.round(count) : 5
+  var stops = []
+  for (var i = 0; i < steps; i++) {
+    var position = i / (steps - 1)
+    stops.push({ position: position, opacity: cloudOpacity(position * 100) })
+  }
+  return stops
+}
+
 function precipitationBandLabel(band) {
   if (!band) return ""
   if (band.maxMm === Infinity) return band.minMm + "+ mm"

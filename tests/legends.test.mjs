@@ -14,10 +14,28 @@ test('R5: the cloud legend shows both ends of the scale', () => {
 
 test('R5: the cloud legend is the scale it describes', () => {
   // The scale is opacity of one colour, so the legend ramps that same colour
-  // from transparent to full rather than inventing a separate key.
+  // rather than inventing a separate key.
   assert.match(panel, /GradientStop \{ position: 0\.0; color: "transparent" \}/);
-  assert.match(panel, /GradientStop \{ position: 1\.0; color: Model\.CLOUD_COLOR \}/);
   assert.match(panel, /orientation: Gradient\.Horizontal/);
+  assert.match(panel, /Model\.cloudLegendStops\(6\)/);
+  assert.match(panel, /Qt\.rgba\(Model\.CLOUD_RGB\.r \/ 255/);
+});
+
+test('R5: the legend draws the same curve as the map', () => {
+  // A straight ramp in the key would disagree with a curved ramp on the map.
+  const stops = plain(M.cloudLegendStops(6));
+  assert.equal(stops.length, 6);
+  assert.equal(stops[0].position, 0);
+  assert.equal(stops[0].opacity, 0);
+  assert.equal(stops[stops.length - 1].position, 1);
+  assert.equal(stops[stops.length - 1].opacity, 1);
+  for (const stop of stops) {
+    assert.equal(stop.opacity, M.cloudOpacity(stop.position * 100),
+      `legend stop at ${stop.position} must match the map's opacity`);
+  }
+  for (let i = 1; i < stops.length; i++) {
+    assert.ok(stops[i].opacity > stops[i - 1].opacity, 'the key must increase monotonically');
+  }
 });
 
 test('R5: the precipitation legend has one entry per band', () => {
