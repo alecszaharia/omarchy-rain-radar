@@ -65,28 +65,6 @@ Canvas {
       }
     }
 
-    drawCenterMarker(ctx)
     ctx.globalAlpha = 1.0
-  }
-
-  // The Chisinau marker, at the projected centre coordinate. Drawn last so it
-  // sits above every outline, and drawn as geometry rather than a label — the
-  // map carries no place names at all.
-  function drawCenterMarker(ctx) {
-    var point = Model.projectPoint(Model.GRID_CENTER.lon, Model.GRID_CENTER.lat,
-                                   root.width, root.height)
-
-    ctx.globalAlpha = 1.0
-    ctx.strokeStyle = root.strokeColor
-    ctx.fillStyle = root.strokeColor
-
-    ctx.beginPath()
-    ctx.arc(point.x, point.y, Model.MARKER_DOT_RADIUS, 0, 2 * Math.PI)
-    ctx.fill()
-
-    ctx.lineWidth = Model.MARKER_RING_WIDTH
-    ctx.beginPath()
-    ctx.arc(point.x, point.y, Model.MARKER_RING_RADIUS, 0, 2 * Math.PI)
-    ctx.stroke()
   }
 }

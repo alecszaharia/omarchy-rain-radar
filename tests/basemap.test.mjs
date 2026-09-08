@@ -43,11 +43,11 @@ test('R2: the emphasis rule is documented', () => {
 
 test('R2: the renderer applies the rule rather than restating it', () => {
   assert.match(basemap, /Model\.basemapStyle\(region\)/);
-  // Scoped to the outline loop: that is where basemapStyle is the sole source
-  // of truth. The marker is not an outline and sets its own full opacity.
+  // Scoped to the outline loop, ending at its opacity reset: that is where
+  // basemapStyle is the sole source of truth.
   const loopStart = basemap.indexOf('for (var pass = 0');
-  const loopEnd = basemap.indexOf('drawCenterMarker(ctx)');
-  assert.ok(loopStart > 0 && loopEnd > loopStart);
+  const loopEnd = basemap.lastIndexOf('ctx.globalAlpha = 1.0');
+  assert.ok(loopStart > 0 && loopEnd > loopStart, 'expected the outline loop and its opacity reset');
   const loop = basemap.slice(loopStart, loopEnd);
   assert.ok(!/lineWidth = [\d.]+/.test(loop), 'stroke width must come from the rule');
   assert.ok(!/globalAlpha = [\d.]+/.test(loop), 'opacity must come from the rule');

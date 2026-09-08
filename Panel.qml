@@ -27,6 +27,9 @@ Panel {
   // Theme values lifted off the bar once so every child binds to the same
   // source. barForeground comes from the Panel base and tracks bar.barForeground,
   // so a theme change propagates through these bindings without any reload.
+  // The published grid model, injected by the bar widget from WeatherData.
+  property var gridModel: null
+
   readonly property color foregroundColor: root.barForeground
   readonly property string themeFontFamily: root.bar ? root.bar.fontFamily : ""
 
@@ -80,9 +83,22 @@ Panel {
           width: parent.width
           height: Math.round(width / Model.MAP_ASPECT)
 
+          // Layer order: outlines, then the cloud field, then the marker on
+          // top — at full cover the cloud layer is opaque, so a marker drawn
+          // with the basemap would vanish exactly when it matters most.
           Basemap {
             anchors.fill: parent
             strokeColor: root.foregroundColor
+          }
+
+          CloudLayer {
+            anchors.fill: parent
+            gridModel: root.gridModel
+          }
+
+          CenterMarker {
+            anchors.fill: parent
+            markerColor: root.foregroundColor
           }
         }
       }

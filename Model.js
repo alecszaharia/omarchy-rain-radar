@@ -488,3 +488,26 @@ function serializeCache(model) {
 var MARKER_DOT_RADIUS = 2.5
 var MARKER_RING_RADIUS = 5.0
 var MARKER_RING_WIDTH = 1.5
+
+// ---------------------------------------------------------------------------
+// Cloud heatmap — cavekit-map-rendering.md R3
+//
+// Cloud cover is drawn as the opacity of one fixed neutral colour. The hue
+// never varies with the value: a viewer reads density, not colour, so there is
+// no palette to misread and nothing to confuse with the blue precipitation
+// overlay. Documented in docs/rendering.md.
+// ---------------------------------------------------------------------------
+
+// A mid neutral grey, deliberately neither white nor black: it has to read as
+// cloud against a light bar theme and a dark one alike.
+var CLOUD_COLOR = "#9aa0a6"
+
+// Opacity for a cloud cover percentage. 0% is fully transparent, so the
+// basemap underneath is untouched, and 100% is fully opaque — overcast hides
+// the ground, which is why the Chisinau marker is drawn above this layer.
+function cloudOpacity(percent) {
+  if (typeof percent !== "number" || !isFinite(percent)) return 0
+  if (percent <= 0) return 0
+  if (percent >= 100) return 1
+  return percent / 100
+}

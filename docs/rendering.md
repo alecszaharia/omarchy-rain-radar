@@ -71,3 +71,28 @@ never overdrawn by a neighbour sharing its border.
 `data/Outlines.js` is a generated QML `.js` resource, not JSON. The QML engine
 loads it as part of the compilation unit, so drawing the basemap reads no file
 and issues no network request. Regenerate it with `tools/build-outlines.py`.
+
+## Cloud heatmap
+
+`Model.CLOUD_COLOR = "#9aa0a6"` — a single mid neutral grey, and the only colour
+this layer ever uses. Cloud cover is expressed purely as opacity:
+
+| Cloud cover | Opacity |
+| --- | --- |
+| 0% | 0.0 — fully transparent, the basemap beneath is unmodified |
+| 50% | 0.5 |
+| 100% | 1.0 — fully opaque |
+
+`Model.cloudOpacity(percent)` is the ramp: linear, monotonically increasing, and
+clamped at both ends. The hue never varies with the value, so a viewer reads
+density rather than decoding a palette, and nothing on this layer can be
+confused with the blue precipitation overlay above it.
+
+The grey is deliberately neither white nor black — it has to read as cloud
+against a light bar theme and a dark one alike.
+
+### Layer order
+
+Outlines, then the cloud field, then the Chisinau marker. At 100% cover the
+cloud layer is opaque, so the marker is drawn on top; painted with the basemap
+it would disappear exactly when the map is most worth reading.

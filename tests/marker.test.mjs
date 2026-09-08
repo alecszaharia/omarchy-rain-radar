@@ -4,11 +4,12 @@ import assert from 'node:assert/strict';
 import { loadQmlJs, plain, readRepoFile } from './qml-js.mjs';
 
 const M = loadQmlJs('Model.js');
+const marker = readRepoFile('CenterMarker.qml');
 const basemap = readRepoFile('Basemap.qml');
 const panel = readRepoFile('Panel.qml');
 
 test('R2: the marker is drawn at the projected centre coordinate', () => {
-  assert.match(basemap, /Model\.projectPoint\(Model\.GRID_CENTER\.lon, Model\.GRID_CENTER\.lat,\s*root\.width, root\.height\)/);
+  assert.match(marker, /Model\.projectPoint\(Model\.GRID_CENTER\.lon, Model\.GRID_CENTER\.lat,\s*root\.width, root\.height\)/);
   const c = plain(M.GRID_CENTER);
   assert.equal(c.lat, 47.01);
   assert.equal(c.lon, 28.86);
@@ -22,10 +23,15 @@ test('R2: the marker lands at the centre of the map area', () => {
   assert.ok(Math.abs(p.y - H / 2) <= 0.01 * H);
 });
 
-test('R2: the marker is drawn above every outline', () => {
-  const markerCall = basemap.indexOf('drawCenterMarker(ctx)');
-  const outlineLoop = basemap.indexOf('for (var pass = 0');
-  assert.ok(outlineLoop > 0 && markerCall > outlineLoop, 'the marker must be drawn last');
+test('R2: the marker is drawn above the outlines and the cloud field', () => {
+  // Its own layer, stacked last in the map area, so an opaque cloud cell at
+  // 100% cover cannot hide it.
+  const panelSource = readRepoFile('Panel.qml');
+  const basemapAt = panelSource.indexOf('Basemap {');
+  const cloudAt = panelSource.indexOf('CloudLayer {');
+  const markerAt = panelSource.indexOf('CenterMarker {');
+  assert.ok(basemapAt > 0 && cloudAt > basemapAt, 'the cloud field must sit above the outlines');
+  assert.ok(markerAt > cloudAt, 'the marker must sit above the cloud field');
 });
 
 test('R2: the marker is visible geometry, not a hairline', () => {
@@ -36,10 +42,12 @@ test('R2: the marker is visible geometry, not a hairline', () => {
 
 test('R2: no place-name or city labels appear on the map', () => {
   // The map layer draws no text at all: no canvas text calls and no Text items.
-  for (const call of ['fillText', 'strokeText', 'measureText']) {
-    assert.ok(!basemap.includes(call), `the map must not draw text (${call})`);
+  for (const source of [basemap, marker, readRepoFile('CloudLayer.qml')]) {
+    for (const call of ['fillText', 'strokeText', 'measureText']) {
+      assert.ok(!source.includes(call), `the map must not draw text (${call})`);
+    }
+    assert.ok(!/\bText\s*\{/.test(source), 'the map must contain no Text elements');
   }
-  assert.ok(!/\bText\s*\{/.test(basemap), 'the map must contain no Text elements');
 });
 
 test('R2: the map area itself carries no text overlay', () => {
@@ -51,6 +59,7 @@ test('R2: the map area itself carries no text overlay', () => {
 });
 
 test('R2: the marker uses the theme colour like the outlines', () => {
-  assert.match(basemap, /ctx\.fillStyle = root\.strokeColor/);
+  assert.match(marker, /ctx\.fillStyle = root\.markerColor/);
+  assert.deepEqual(marker.match(/"#[0-9a-fA-F]{3,8}"/g) || [], []);
   assert.deepEqual(basemap.match(/"#[0-9a-fA-F]{3,8}"/g) || [], []);
 });
