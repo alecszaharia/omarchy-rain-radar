@@ -1,0 +1,48 @@
+# Cavekit runtime — transient state
+.cavekit/.loop.json
+.cavekit/.loop.lock
+.cavekit/.progress.json
+.cavekit/.auto-backprop-pending.json
+.cavekit/.debug.log
+.cavekit/tool-cache/
+.cavekit/state.md
+.cavekit/token-ledger.json
+.cavekit/task-status.json
+.cavekit/tasks.json
+.cavekit/capabilities.json
+
+# Claude Code — machine-local settings and notes
+.claude/settings.local.json
+.claude/*.local.md
+
+# Node tooling for the test suite
+node_modules/
+npm-debug.log*
+yarn-error.log*
+.npm/
+coverage/
+*.tsbuildinfo
+
+# Qt / QML build leftovers
+*.qmlc
+*.jsc
+.qmlls.ini
+.qt/
+build/
+
+# Editors and IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.direnv/
+
+# OS cruft
+.DS_Store
+Thumbs.db
+
+# Local environment / secrets
+.env
+.env.*
+!.env.example

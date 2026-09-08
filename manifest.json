@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "io.github.alecszaharia.cloud-radar",
+  "name": "Cloud Radar",
+  "version": "0.1.0",
+  "author": "alecszaharia",
+  "license": "MIT",
+  "description": "Cloud-cover map of Eastern Europe centered on Chisinau, with a precipitation overlay.",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "Cloud Radar",
+    "description": "Hand-drawn cloud-cover map of Eastern Europe centered on Chisinau, with a precipitation overlay.",
+    "category": "Info",
+    "allowMultiple": false,
+    "defaultSection": "center"
+  }
+}
