@@ -209,20 +209,23 @@ The glyph says what the weather is; the opacity says how much to trust it
 | --- | --- | --- |
 | ready | the condition glyph | 1.0 |
 | stale | the condition glyph | 0.6 |
-| error | `U+E374` (weather "n/a") | 0.4 |
-| centre cloud unavailable, any status | `U+E374` | 0.4 |
+| error | the condition glyph | 0.4 |
+| no usable centre reading, any status | `U+E374` (weather "n/a") | 0.4 |
 
-A centre with no usable cloud reading resolves to no condition and takes the
-same appearance as an error, so unknown data is never shown as clear weather.
+The glyph answers *what the weather is*; the opacity answers *how much to trust
+it*. Those are separate questions, which is why a failed refresh dims the glyph
+rather than replacing it: while a usable reading is on screen the bar keeps
+reporting it, exactly as the popup keeps showing the map beneath its error
+indicator. A bar that claimed ignorance while the popup displayed a map would be
+contradicting itself.
 
-For a known condition the three states are distinguishable: ready is the glyph
-at full strength, stale is the same glyph dimmed, and error swaps the glyph *and*
-dims further.
+The three statuses stay distinguishable for a known condition by opacity alone:
+1.0, 0.6, 0.4.
 
-When the centre reading itself is unavailable the entry shows the unknown
-appearance regardless of status. That is deliberate and is what R7 asks for: the
-bar must never imply a reading it does not have, and "unknown" outranks "how old
-is this".
+`U+E374` is reserved for the one case where the first question has no answer —
+no usable centre reading, or no model at all. Then every status presents
+identically, because there is nothing for the status to qualify. This is what
+keeps unknown data from ever being shown as clear weather.
 
 ## Popup status presentations
 

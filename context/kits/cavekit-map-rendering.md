@@ -136,8 +136,11 @@ error.
       exactly one of the four documented glyphs.
 - [ ] A numeric center cloud cover with an "unavailable" center precipitation is treated as no precipitation
       (same rule as R4).
-- [ ] An "unavailable" center cloud cover value never resolves to a condition glyph; it uses the same
-      documented distinct appearance as the error state, so unknown data is never shown as clear weather.
+- [ ] An "unavailable" center cloud cover value never resolves to a condition glyph, so unknown data is
+      never shown as clear weather. It uses a documented distinct appearance of its own, and presents
+      identically in every status, since there is no reading for the status to qualify.
+- [ ] While a usable center reading exists the bar entry keeps reporting it in every status, including
+      `error`: the bar must not claim to have no reading while the popup is displaying a map.
 - [ ] A fixture for each of the four conditions renders its documented glyph.
 - [ ] In the `stale` status, the bar entry adopts a documented appearance distinct from `ready`.
 - [ ] In the `error` status, the bar entry adopts a documented appearance distinct from both `ready` and
@@ -185,5 +188,8 @@ the same fixed grid. It is view state, not a user setting.
 ## Changelog
 - 2026-09-04: Initial draft from the approved design (context/refs/approved-design-cloud-radar.md).
 - 2026-09-04: Reviewer pass 1 — clarified grid cell-centre convention, setting clamping, cache-fresh scheduling, fixed timeout/retry constants, unavailable-data handling.
+- 2026-09-08: R7 corrected — `error` no longer replaces the condition glyph. The original criterion tied the
+  error appearance to the unknown-data appearance, which made the bar report "no data" whenever a refresh
+  failed even though a cached reading was on screen and the popup was drawing it.
 - 2026-09-08: Added R8 (zoom) at the user's request; zoom removed from Out of Scope, center and extent stay out.
 - 2026-09-04: Reviewer pass 2 (advisory) — neutral-colour rule scoped to numeric cells, minimum screen size 1280×720, unavailable-precipitation rule for the bar glyph.

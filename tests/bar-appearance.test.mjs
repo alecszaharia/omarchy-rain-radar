@@ -21,9 +21,24 @@ test('R7: an unavailable centre cloud never resolves to a condition glyph', () =
   }
 });
 
-test('R7: unknown data uses the same appearance as an error', () => {
-  assert.deepEqual(look(center(M.UNAVAILABLE), 'ready'), look(center(50), 'error'));
-  assert.deepEqual(look(null, 'ready'), look(center(50), 'error'));
+test('R7: a failed refresh keeps reporting the reading it still has', () => {
+  // The glyph answers what the weather is; the opacity answers how much to
+  // trust it. A failed refresh must not make the bar claim ignorance while the
+  // popup is still showing a map.
+  const glyphs = plain(M.BAR_GLYPHS);
+  assert.equal(look(center(7), 'error').glyph, glyphs.clear);
+  assert.equal(look(center(50, 4), 'error').glyph, glyphs.precipitating);
+  assert.notEqual(look(center(7), 'error').glyph, M.BAR_UNKNOWN_GLYPH);
+});
+
+test('R7: the unknown glyph is reserved for having no reading at all', () => {
+  assert.equal(look(center(M.UNAVAILABLE), 'ready').glyph, M.BAR_UNKNOWN_GLYPH);
+  assert.equal(look(null, 'ready').glyph, M.BAR_UNKNOWN_GLYPH);
+  // And never appears while a usable reading exists, whatever the status.
+  for (const status of ['ready', 'stale', 'error', 'loading']) {
+    assert.notEqual(look(center(7), status).glyph, M.BAR_UNKNOWN_GLYPH,
+      `a usable reading must survive ${status}`);
+  }
 });
 
 test('R7: stale is distinct from ready', () => {
@@ -41,14 +56,13 @@ test('R7: error is distinct from both ready and stale', () => {
   const error = look(center(50), 'error');
   assert.notEqual(key(error), key(ready));
   assert.notEqual(key(error), key(stale));
-  assert.notEqual(error.glyph, ready.glyph, 'the error state swaps the glyph');
-  assert.ok(error.opacity < stale.opacity, 'and dims further than stale');
+  assert.equal(error.glyph, ready.glyph, 'the reading itself is unchanged');
+  assert.ok(error.opacity < stale.opacity, 'error dims further than stale');
 });
 
 test('R7: an unknown centre reads as unknown whatever the status', () => {
-  // R7 asks for exactly this: an unavailable centre cloud takes the same
-  // appearance as the error state, so the entry never implies a reading it
-  // does not have. Status distinctness is a property of a known condition.
+  // With no reading there is nothing for the status to qualify, so every
+  // status presents identically: the entry never implies a reading it lacks.
   const unknown = look(center(M.UNAVAILABLE), 'error');
   for (const status of ['ready', 'stale', 'error', 'loading']) {
     assert.deepEqual(look(center(M.UNAVAILABLE), status), unknown,

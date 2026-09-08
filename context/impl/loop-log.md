@@ -86,3 +86,10 @@ Build site: context/plans/build-site.md
 - Fix: cache file is now watched, so a peer's result propagates instead of being re-fetched; restoreFromCache adopts a strictly newer model only; scheduled ticks go through refreshIfDue, which reuses loadTimeDecision so there is one definition of "due"; per-instance period offset stops ticks landing together. Manual refresh deliberately still bypasses the due check.
 - Rejected: a plugin-local QML singleton. qmllint resolves `import "."` with a qmldir, but an untested import under Quickshell's loader could brick the widget on the next restart, and it could not be verified without one.
 - Tests: 365 passing.
+
+### Wave 11 — bar icon reported N/A — 2026-09-08
+- Reported by the user: bar icon showing the n/a glyph.
+- Not a rendering fault. The cache restores correctly (verified against the real file: 108 cells, centre 7% -> "clear"), but Open-Meteo is returning 429, so the status is `error` — and barAppearance replaced the condition glyph with n/a whenever the last attempt failed.
+- The kit itself was wrong here, not just the code: R7 tied the error appearance to the unknown-data appearance. That made the bar claim "no reading" while the popup was drawing a map from a perfectly good cached one.
+- Corrected at the source: R7 now states that a usable centre reading keeps being reported in every status, and that the unknown glyph is reserved for having no reading at all. Statuses stay distinguishable by opacity (1.0 / 0.6 / 0.4).
+- Tests: 366 passing.

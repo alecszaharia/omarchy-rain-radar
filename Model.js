@@ -1029,15 +1029,21 @@ var BAR_ERROR_OPACITY = 0.4
 
 // { glyph, opacity } for the bar entry.
 //
-// A centre with no usable cloud reading resolves to no condition, and takes the
-// same appearance as an error: unknown data must never be shown as clear
-// weather. Stale keeps the condition glyph but dims it, so the three states stay
-// distinguishable even when the glyph itself is the unknown one.
+// The glyph answers "what is the weather"; the opacity answers "how much should
+// you trust it". Those are separate questions, so a failed refresh dims the
+// glyph rather than replacing it: while a usable reading is on screen the bar
+// keeps reporting it, exactly as the popup keeps showing the map beneath the
+// error indicator.
+//
+// The unknown glyph is reserved for the one case where the first question has
+// no answer — no usable centre reading — so unknown data is never shown as
+// clear weather, and the bar never claims ignorance while displaying a map.
 function barAppearance(center, status) {
   var condition = barCondition(center)
+  if (!condition) return { glyph: BAR_UNKNOWN_GLYPH, opacity: BAR_ERROR_OPACITY }
 
-  if (status === STATUS.error || !condition) {
-    return { glyph: BAR_UNKNOWN_GLYPH, opacity: BAR_ERROR_OPACITY }
+  if (status === STATUS.error) {
+    return { glyph: BAR_GLYPHS[condition], opacity: BAR_ERROR_OPACITY }
   }
   if (status === STATUS.stale) {
     return { glyph: BAR_GLYPHS[condition], opacity: BAR_STALE_OPACITY }
