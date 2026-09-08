@@ -43,10 +43,16 @@ test('R2: the emphasis rule is documented', () => {
 
 test('R2: the renderer applies the rule rather than restating it', () => {
   assert.match(basemap, /Model\.basemapStyle\(region\)/);
-  // A literal width or alpha in the renderer would be a second source of truth.
-  assert.ok(!/lineWidth = [\d.]+/.test(basemap), 'stroke width must come from the rule');
-  assert.ok(!/globalAlpha = [\d.]+(?!;?\s*\/\/ reset)/.test(basemap.replace('ctx.globalAlpha = 1.0', '')),
-    'opacity must come from the rule');
+  // Scoped to the outline loop: that is where basemapStyle is the sole source
+  // of truth. The marker is not an outline and sets its own full opacity.
+  const loopStart = basemap.indexOf('for (var pass = 0');
+  const loopEnd = basemap.indexOf('drawCenterMarker(ctx)');
+  assert.ok(loopStart > 0 && loopEnd > loopStart);
+  const loop = basemap.slice(loopStart, loopEnd);
+  assert.ok(!/lineWidth = [\d.]+/.test(loop), 'stroke width must come from the rule');
+  assert.ok(!/globalAlpha = [\d.]+/.test(loop), 'opacity must come from the rule');
+  assert.match(loop, /ctx\.globalAlpha = style\.opacity/);
+  assert.match(loop, /ctx\.lineWidth = style\.lineWidth/);
 });
 
 test('R2: Moldova is drawn last so a shared border cannot overdraw it', () => {

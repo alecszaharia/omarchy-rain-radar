@@ -481,3 +481,10 @@ var CACHE_RELATIVE_PATH = "omarchy/cloud-radar/model.json"
 function serializeCache(model) {
   return JSON.stringify({ version: CACHE_VERSION, model: model }) + "\n"
 }
+
+// Chisinau marker geometry, in map pixels — cavekit-map-rendering.md R2. A
+// filled dot inside an open ring reads at popup size without needing a label,
+// which the map deliberately has none of.
+var MARKER_DOT_RADIUS = 2.5
+var MARKER_RING_RADIUS = 5.0
+var MARKER_RING_WIDTH = 1.5
