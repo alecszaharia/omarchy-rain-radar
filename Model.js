@@ -977,6 +977,14 @@ function isUnavailableAt(cells, u, v) {
   return cells[nearestCellIndex(u, v)].cloudCoverPercent === UNAVAILABLE
 }
 
+// A cell with no precipitation reading draws no marking at all, decided the
+// same cell-shaped way. Interpolating a neighbour's amount into it would put
+// rain on a cell that never reported any.
+function isPrecipitationUnavailableAt(cells, u, v) {
+  if (!cells || cells.length < GRID_CELL_COUNT) return true
+  return cells[nearestCellIndex(u, v)].precipitationMm === UNAVAILABLE
+}
+
 // Diagonal stripes. Alternating between a fixed alpha and nothing is a texture,
 // not a shade, which is why it cannot collide with any value on the ramp.
 function hatchAlphaAt(x, y) {

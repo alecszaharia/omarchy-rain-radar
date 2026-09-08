@@ -47,7 +47,7 @@ test('R4: the layer uses blue only', () => {
 });
 
 test('R4: intensity is carried by opacity, not by hue', () => {
-  assert.match(layer, /data\[index \+ 3\] = Math\.round\(band\.opacity \* 255\)/);
+  assert.match(layer, /data\[index \+ 3\] = Math\.round\(opacity \* 255\)/);
   assert.match(layer, /data\[index\] = red/);
 });
 
@@ -66,7 +66,7 @@ test('R4: an unavailable amount draws nothing', () => {
 test('R4: the amount is interpolated before it is banded', () => {
   // Banding first would step at cell edges; interpolating first makes the band
   // boundary follow the data.
-  assert.match(layer, /Model\.precipitationBand\(Model\.samplePrecipitationField\(cells, u, v\)\)/);
+  assert.match(layer, /Model\.precipitationBand\(Model\.samplePrecipitationField\(cells, u, v\)\)\.opacity/);
   const cells = field((col) => (col === 3 ? 0 : (col === 4 ? 8 : 0)));
   const a = plain(M.gridPointFraction(3, 4));
   const b = plain(M.gridPointFraction(4, 4));

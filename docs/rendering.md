@@ -141,8 +141,16 @@ amount renders identically whatever is falling.
 
 A reading that is not a usable number — including `UNAVAILABLE` — falls in the
 `none` band, so unknown precipitation is drawn as no precipitation rather than
-as an invented intensity. The cell's cloud cover is unaffected and is still
-drawn from its own value.
+as an invented intensity.
+
+A cell with no amount of its own is skipped before interpolation, by the same
+nearest-cell rule the cloud hatch uses (`Model.isPrecipitationUnavailableAt`).
+Without that, a drenched neighbour's amount would be interpolated into it and
+paint rain over a cell that never reported any.
+
+The two unknowns are independent: a missing amount leaves the cell's cloud cover
+drawn normally, and the R3 hatch applies only when the cloud cover itself is
+unavailable.
 
 ## Bar glyph
 

@@ -39,15 +39,20 @@ Canvas {
       var rowOffset = y * w * 4
       for (var x = 0; x < w; x++) {
         var u = (x + 0.5) / w
-        // An unavailable amount lands in the "none" band, which draws nothing —
-        // unknown precipitation is never shown as precipitation.
-        var band = Model.precipitationBand(Model.samplePrecipitationField(cells, u, v))
-
         var index = rowOffset + x * 4
+
+        // A cell with no reading of its own draws nothing. Its neighbours'
+        // amounts must not be interpolated into it, or the map would show rain
+        // over a cell that never reported any.
+        var opacity = 0
+        if (!Model.isPrecipitationUnavailableAt(cells, u, v)) {
+          opacity = Model.precipitationBand(Model.samplePrecipitationField(cells, u, v)).opacity
+        }
+
         data[index] = red
         data[index + 1] = green
         data[index + 2] = blue
-        data[index + 3] = Math.round(band.opacity * 255)
+        data[index + 3] = Math.round(opacity * 255)
       }
     }
 

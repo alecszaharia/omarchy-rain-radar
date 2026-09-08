@@ -21,3 +21,20 @@ export function completeResponse(overrides = {}) {
     }
   }));
 }
+
+// The same precipitation amount reported as rain and as snow. The plugin asks
+// for a single precipitation total and never for the breakdown, so these must
+// produce identical models.
+export function rainResponse(mm = 3.0) {
+  return completeResponse().map((entry) => ({
+    ...entry,
+    current: { ...entry.current, precipitation: mm, rain: mm, snowfall: 0 }
+  }));
+}
+
+export function snowResponse(mm = 3.0) {
+  return completeResponse().map((entry) => ({
+    ...entry,
+    current: { ...entry.current, precipitation: mm, rain: 0, snowfall: mm }
+  }));
+}
