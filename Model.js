@@ -618,3 +618,32 @@ function updatedLabel(dataTime) {
   var date = parseDataTime(dataTime)
   return date ? "Updated " + formatClock(date) : ""
 }
+
+// Reads a cache payload back into a grid model, or null when it cannot be
+// trusted. A cache that fails any of these checks is treated exactly like no
+// cache at all: it is ignored, never reported as a fetch error.
+function deserializeCache(rawText) {
+  var text = String(rawText === null || rawText === undefined ? "" : rawText)
+  if (text.replace(/^\s+|\s+$/g, "") === "") return null
+
+  var payload
+  try {
+    payload = JSON.parse(text)
+  } catch (e) {
+    return null
+  }
+
+  if (!payload || typeof payload !== "object") return null
+  // A payload from a future or older shape is not readable by this code.
+  if (payload.version !== CACHE_VERSION) return null
+
+  var model = payload.model
+  if (!model || typeof model !== "object") return null
+  if (Object.prototype.toString.call(model.cells) !== "[object Array]") return null
+  if (model.cells.length !== GRID_CELL_COUNT) return null
+  if (model.columns !== GRID_COLUMNS || model.rows !== GRID_ROWS) return null
+  if (!model.bounds || model.bounds.minLon !== GRID_BOUNDS.minLon) return null
+  if (!model.center) return null
+
+  return model
+}

@@ -104,6 +104,37 @@ QtObject {
       // Non-fatal by design: log it and carry on with the model in memory.
       console.warn("cloud-radar: cache write failed at", root.cachePath, error)
     }
+
+    // Startup restore. A cache that parses gives the popup a map before any
+    // network result; one that does not is ignored in silence.
+    onLoaded: root.restoreFromCache(text())
+    onLoadFailed: root.noteCacheUnreadable()
+  }
+
+  // ---- Cache restore (R5) ------------------------------------------------
+
+  // True once a cache read has been attempted, however it turned out, so the
+  // load-time refresh decision in T-036 knows the answer is in.
+  property bool cacheChecked: false
+
+  function noteCacheUnreadable() {
+    // No cache, or an unreadable one: startup proceeds as if none existed. This
+    // is deliberately not an error — nothing has been fetched yet to fail.
+    root.cacheChecked = true
+  }
+
+  function restoreFromCache(rawText) {
+    root.cacheChecked = true
+    var restored = Model.deserializeCache(rawText)
+    if (!restored) return false
+    // A network result that already landed always wins over the cache.
+    if (root.gridModel) return false
+
+    root.gridModel = restored
+    statusState.lastSuccessAt = Model.parseDataTime(restored.fetchedAt)
+    // Staleness is applied in T-039; a restored model starts as ready.
+    statusState.set(Model.STATUS.ready)
+    return true
   }
 
   // ---- Scheduling (R4) ---------------------------------------------------
