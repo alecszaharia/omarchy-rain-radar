@@ -314,3 +314,13 @@ function cellRects(width, height) {
   }
   return rects
 }
+
+// ---------------------------------------------------------------------------
+// Popup geometry — cavekit-map-rendering.md R6
+// ---------------------------------------------------------------------------
+
+// Popup content width, in the same Style.space units the shell's own panels
+// use. 480 is the value Omarchy's built-in weather popup passes to
+// fittedContentWidth, so Cloud Radar sits beside it at a matching width.
+// Documented in docs/rendering.md.
+var POPUP_CONTENT_WIDTH = 480

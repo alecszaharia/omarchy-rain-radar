@@ -1,6 +1,7 @@
 import QtQuick
 import qs.Commons
 import qs.Ui
+import "Model.js" as Model
 
 // The Cloud Radar popup — cavekit-map-rendering.md R6.
 //
@@ -37,8 +38,12 @@ Panel {
     open: root.opened
     centerOnBar: true
     focusTarget: keyCatcher
-    // Width is formalised as a documented constant in T-017.
-    contentWidth: panel.fittedContentWidth(Style.space(480))
+    // Both dimensions go through the fitters, which clamp to the free screen
+    // area the host reports for this display — that is what keeps the popup
+    // inside the screen at 1280x720 rather than relying on the content being
+    // small. Width itself matches the built-in weather popup; see
+    // docs/rendering.md.
+    contentWidth: panel.fittedContentWidth(Style.space(Model.POPUP_CONTENT_WIDTH))
     contentHeight: panel.fittedContentHeight(content.implicitHeight)
 
     PanelKeyCatcher {
@@ -66,7 +71,7 @@ Panel {
         // T-014 onward.
         Item {
           width: parent.width
-          height: Math.round(width / 1.5)
+          height: Math.round(width / Model.MAP_ASPECT)
         }
       }
     }
