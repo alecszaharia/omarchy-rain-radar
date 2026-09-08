@@ -21,3 +21,8 @@ Build site: context/plans/build-site.md
 | T-025 | DONE | Model.PRECIPITATION_BANDS half-open [0,0.1)(0.1,2.5)(2.5,7.6)[7.6,inf) + precipitationBand(). Total, gapless. Harness plain() fixed to structuredClone. 9 tests. |
 | T-026 | DONE | Model.barCondition/barGlyph/BAR_GLYPHS. Precip wins, then cloud [0,25)(25,75)[75,100]. Swept exhaustively. Unavailable cloud -> null. 9 tests. |
 | T-027 | DONE | Model.updatedLabel/parseDataTime/formatClock + OPEN_METEO_ATTRIBUTION. GMT parsed explicitly, rendered in reader's zone. 5 tests. |
+| T-031 | DONE | Model.sampleField/sampleCloudField bilinear; CloudLayer per-pixel putImageData. Edge-flat, weight renormalisation on unavailable corners. 9 tests. |
+| T-032 | DONE | PrecipitationLayer above cloud, blue-only (#4a90d9), interpolate-then-band. 8 tests. |
+| T-033 | DONE | Cloud gradient legend (0%/100%) + Repeater over PRECIPITATION_BANDS with thresholds; none band outlined. 8 tests. |
+| T-034 | DONE | BarIconButton text = Model.barGlyph(center); WeatherData owned by BarWidget, service injected into Panel for live bindings. 7 tests. |
+| T-035 | PENDING-HUMAN | Cannot be verified by an agent. Needs the plugin running in a real shell on a light and a dark theme, judging outline/marker legibility and whether Moldova reads as distinct. Prepare at T-051/T-057. |

@@ -51,3 +51,10 @@ Build site: context/plans/build-site.md
 - Harness bug fixed: plain() lost Infinity through JSON round-trip; now structuredClone.
 - Tier 3 gate: SKIPPED (codex unauthenticated).
 - Tests: 170 passing. Next: tier 4 — T-028..T-035.
+
+### Wave 5 — Tier 4 — 2026-09-08
+- T-028 scheduler, T-029 cache reader, T-030 status reducer, T-031 interpolation, T-032 precip overlay, T-033 legends, T-034 bar icon — all DONE, gate P at each step.
+- T-035 human review — NOT DONE. Requires a real shell and human judgement; left open deliberately.
+- Refactors that touched earlier tasks (each re-verified, behaviour unchanged): status writes moved behind the reducer (T-021/T-022 assertions updated); tiled cloud fill replaced by the interpolated field (T-024 assertions updated); marker extracted to its own layer above the cloud (T-023).
+- Tier 4 gate: SKIPPED (codex unauthenticated).
+- Tests: 224 passing. Next: tier 5 — T-036..T-044.

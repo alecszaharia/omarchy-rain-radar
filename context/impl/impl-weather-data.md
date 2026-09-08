@@ -19,3 +19,6 @@ Build site: context/plans/build-site.md
 | T-020 | DONE | Model.parseGridModel/nextPublishedModel/statusForParse. 13 garbage inputs + Open-Meteo {error,reason}. Previous model survives failure. 7 tests. |
 | T-021 | DONE | WeatherData.qml: one curl per refresh, single-flight guard, FETCH_TIMEOUT_SECONDS=20 via --max-time, exit!=0 -> error. Timeout bound proven live (curl exit 28). 8 tests. |
 | T-022 | DONE | Atomic FileView write to $XDG_STATE_HOME/omarchy/cloud-radar/model.json, versioned payload, publish-before-persist, both failure paths logged and non-fatal. 7 tests. |
+| T-028 | DONE | Timer interval bound to Model.refreshIntervalMs(setting) -> live setting changes, no restart. triggeredOnStart false. 6 tests. |
+| T-029 | DONE | Model.deserializeCache validates version + grid shape; FileView onLoaded restores before network, onLoadFailed silent. Never sets error. 7 tests. |
+| T-030 | DONE | Pure status reducer (statusOnAttemptStart/Success/Failure) + WeatherStatus.snapshot/apply. All four transitions observed from fixtures. 9 tests. |
