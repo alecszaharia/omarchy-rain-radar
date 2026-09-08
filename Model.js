@@ -135,3 +135,80 @@ function projectionScale(width, height) {
     yPerLat: height / GRID_LAT_SPAN
   }
 }
+
+// ---------------------------------------------------------------------------
+// Grid model — cavekit-weather-data.md R3
+//
+// The sole data structure handed to Map Rendering. Built from a parsed
+// Open-Meteo multi-location response, whose entries are positional: entry i
+// corresponds to gridPoints()[i], the last one being the centre sample.
+// ---------------------------------------------------------------------------
+
+// The distinct value a measurement takes when the source did not supply a
+// usable one. Deliberately not 0: "no cloud" and "we do not know" must never
+// render the same way.
+var UNAVAILABLE = "unavailable"
+
+// Open-Meteo returns a bare object for a single location and an array for
+// several. Normalising to an array first keeps the rest of the mapping
+// positional and shape-agnostic.
+function responseLocations(raw) {
+  if (raw === null || raw === undefined) return []
+  if (Object.prototype.toString.call(raw) === "[object Array]") return raw
+  if (typeof raw === "object") return [raw]
+  return []
+}
+
+// The observation time reported by the source. Every location in one response
+// shares a model run, so the first entry that carries a time speaks for all.
+function responseDataTime(locations) {
+  for (var i = 0; i < locations.length; i++) {
+    var entry = locations[i]
+    if (entry && entry.current && entry.current.time) return String(entry.current.time)
+  }
+  return ""
+}
+
+function measurementsAt(locations, index) {
+  var entry = locations[index]
+  var current = entry ? entry.current : null
+  return {
+    cloudCoverPercent: current ? current.cloud_cover : UNAVAILABLE,
+    precipitationMm: current ? current.precipitation : UNAVAILABLE
+  }
+}
+
+// Builds the grid model from a parsed response. `fetchedAt` is the local time
+// the fetch completed, supplied by the caller so this stays a pure function.
+// Returns null when the response cannot supply a point-for-point mapping.
+function buildGridModel(raw, fetchedAt) {
+  var locations = responseLocations(raw)
+  if (locations.length < GRID_POINT_COUNT) return null
+
+  var points = gridPoints()
+  var cells = []
+  for (var i = 0; i < GRID_CELL_COUNT; i++) {
+    var measured = measurementsAt(locations, i)
+    cells.push({
+      lat: points[i].lat,
+      lon: points[i].lon,
+      cloudCoverPercent: measured.cloudCoverPercent,
+      precipitationMm: measured.precipitationMm
+    })
+  }
+
+  return {
+    bounds: {
+      minLon: GRID_BOUNDS.minLon,
+      maxLon: GRID_BOUNDS.maxLon,
+      minLat: GRID_BOUNDS.minLat,
+      maxLat: GRID_BOUNDS.maxLat
+    },
+    columns: GRID_COLUMNS,
+    rows: GRID_ROWS,
+    cells: cells,
+    center: measurementsAt(locations, GRID_CENTER_INDEX),
+    dataTime: responseDataTime(locations),
+    fetchedAt: fetchedAt
+  }
+}
